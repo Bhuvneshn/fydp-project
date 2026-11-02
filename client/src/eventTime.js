@@ -73,3 +73,20 @@ export function formatCardWhen(event) {
   }
   return `${weekdayShort(event.startAt)} · ${formatTimeRange(event)}`;
 }
+
+// Friendly start line for the Home spotlight: "Happening now · until 9:00 PM",
+// "Today at 6:00 PM · in 3 hours", "Tomorrow at 6:00 PM", or the card line for later dates.
+export function formatRelativeStart(event, now = new Date()) {
+  const start = new Date(event.startAt);
+  if (eventStatus(event, now) === 'live') {
+    return event.endAt && !event.allDay ? `Happening now · until ${formatClock(event.endAt)}` : 'Happening now';
+  }
+  const at = event.allDay ? 'all day' : `at ${formatClock(start)}`;
+  if (dateKey(start) === dateKey(now)) {
+    const mins = Math.round((start - now) / 60000);
+    const soon = mins < 60 ? `in ${mins} min` : `in ${Math.round(mins / 60)} hour${Math.round(mins / 60) === 1 ? '' : 's'}`;
+    return event.allDay ? 'Today, all day' : `Today ${at} · ${soon}`;
+  }
+  if (dateKey(start) === dateKey(now.getTime() + 864e5)) return `Tomorrow ${at}`;
+  return formatCardWhen(event);
+}

@@ -61,24 +61,28 @@ function buildingGroups(events) {
   return [...groups.values()];
 }
 
-// List: events by day. Events already under way count as today.
+// List: anything happening right now first, then events by day. All-day events already under way count as today.
+const NOW_KEY = 'now';
 function dayGroups(rows, now, userPos) {
   const today = dateKey(now);
   const tomorrow = dateKey(now.getTime() + 864e5);
   const days = new Map();
   for (const row of rows) {
-    const key = new Date(row.event.startAt) < now ? today : dateKey(row.event.startAt);
+    const live = !row.event.allDay && eventStatus(row.event, now) === 'live';
+    const key = live ? NOW_KEY : new Date(row.event.startAt) < now ? today : dateKey(row.event.startAt);
     if (!days.has(key)) days.set(key, { key, rows: [] });
     days.get(key).rows.push(row);
   }
-  return [...days.values()].map((d) => {
+  const ordered = [...days.values()].sort((a, b) => (a.key === NOW_KEY ? -1 : b.key === NOW_KEY ? 1 : a.key.localeCompare(b.key)));
+  return ordered.map((d) => {
+    if (d.key === NOW_KEY) return { ...d, label: 'Happening now', lead: true };
     // Noon keeps the long date on the right day whatever the viewer's time zone.
     const long = formatLongDate(`${d.key}T12:00:00`);
     const label = d.key === today ? `Today · ${long}` : d.key === tomorrow ? `Tomorrow · ${long}` : long;
     if (userPos) {
       d.rows.sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
     }
-    return { ...d, label };
+    return { ...d, label, lead: d.key === today };
   });
 }
 
@@ -255,7 +259,11 @@ export default function Events() {
           {data && events.length > 0 && rows.length === 0 && <p className="empty">No events match these filters.</p>}
           {days.map((d) => (
             <section key={d.key} className="day-group" aria-label={d.label}>
-              <h2 className="section-label">{d.label}</h2>
+              <h2 className={d.lead ? 'day-heading lead' : 'day-heading'}>
+                {d.key === 'now' && <span className="live-dot" aria-hidden="true" />}
+                {d.label}
+                <span className="day-count">{d.rows.length}</span>
+              </h2>
               {d.rows.map(({ event, moreDates, distance }) => (
                 <EventCard key={event.id} event={event} now={now} moreDates={moreDates} distance={distance} />
               ))}

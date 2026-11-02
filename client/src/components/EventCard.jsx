@@ -43,8 +43,11 @@ export default function EventCard({ event, now, distance, moreDates = 0 }) {
   ) : null;
 
   return (
-    <Link to={`/events/${encodeURIComponent(event.id)}`} className="event-card">
-      <DateBlock date={event.startAt} />
+    <Link
+      to={`/events/${encodeURIComponent(event.id)}`}
+      className={`event-card${event.going ? ' is-going' : live ? ' is-live' : ''}`}
+    >
+      <DateBlock date={event.startAt} going={event.going} />
       <span className="event-card-body">
         <span className="event-card-when">{formatCardWhen(event)}</span>
         <span className="event-card-title">{event.title}</span>
