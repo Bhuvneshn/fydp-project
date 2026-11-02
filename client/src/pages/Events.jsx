@@ -9,6 +9,13 @@ const WHEN = [
   { value: 'today', label: 'Today' },
   { value: 'week', label: 'Next 7 days' },
 ];
+// Map layers, matching SOURCE_LAYERS on the server. All are on by default; ?hide= turns them off.
+const LAYERS = [
+  { value: 'campus', label: 'Campus' },
+  { value: 'athletics', label: 'Athletics' },
+  { value: 'student', label: 'Student-run' },
+  { value: 'clubs', label: 'Clubs' },
+];
 const OFF_CAMPUS = 'off-campus';
 
 function distanceKm(a, b) {
@@ -19,12 +26,12 @@ function distanceKm(a, b) {
   return 12742 * Math.asin(Math.sqrt(h));
 }
 
-function matches(event, { when, sources, q }, now) {
-  if (sources.length && !sources.includes(event.source)) return false;
+function matches(event, { when, hidden, q }, now) {
+  if (hidden.includes(event.layer)) return false;
   if (when === 'today' && eventStatus(event, now) === 'upcoming') return false;
   if (when === 'week' && new Date(event.startAt) - now > 7 * 864e5) return false;
   const needle = q.trim().toLowerCase();
-  if (needle && ![event.title, event.organizer, event.location, ...event.categories].some((s) => s?.toLowerCase().includes(needle))) {
+  if (needle && ![event.title, event.organizer, event.host, event.location, ...event.categories].some((s) => s?.toLowerCase().includes(needle))) {
     return false;
   }
   return true;
@@ -61,7 +68,7 @@ export default function Events() {
 
   const filters = {
     when: params.get('when') ?? 'all',
-    sources: params.getAll('src'),
+    hidden: params.getAll('hide'),
     q: params.get('q') ?? '',
   };
 
@@ -71,10 +78,11 @@ export default function Events() {
 
   const now = useMemo(() => new Date(), [data]);
   const events = data?.events ?? [];
-  const sources = useMemo(
-    () => [...new Map(events.map((e) => [e.source, e.sourceLabel]))].map(([value, label]) => ({ value, label })),
-    [events]
-  );
+  const layerCounts = useMemo(() => {
+    const counts = {};
+    for (const e of events) counts[e.layer] = (counts[e.layer] ?? 0) + 1;
+    return counts;
+  }, [events]);
   const visible = events.filter((e) => matches(e, filters, now));
   const groups = groupByBuilding(visible, now, userPos);
   const markers = useMemo(
@@ -138,9 +146,12 @@ export default function Events() {
               {data ? `${visible.length} events on and around campus` : 'Loading…'}
             </p>
           </div>
-          <button type="button" className={userPos ? 'chip-btn on' : 'chip-btn'} onClick={locate} disabled={locating}>
-            {locating ? 'Locating…' : userPos ? 'Sorted by distance' : 'Near me'}
-          </button>
+          <div className="events-head-actions">
+            <button type="button" className={userPos ? 'chip-btn on' : 'chip-btn'} onClick={locate} disabled={locating}>
+              {locating ? 'Locating…' : userPos ? 'Sorted by distance' : 'Near me'}
+            </button>
+            <Link to="/events/new" className="btn-primary small">+ Host</Link>
+          </div>
         </header>
 
         <div className="events-filters">
@@ -161,27 +172,33 @@ export default function Events() {
                 {w.label}
               </button>
             ))}
-            <span className="chip-sep" />
-            {sources.map((s) => (
-              <button
-                key={s.value}
-                type="button"
-                className={filters.sources.includes(s.value) ? 'chip-btn on' : 'chip-btn'}
-                onClick={() =>
-                  setParam('src', filters.sources.includes(s.value) ? filters.sources.filter((v) => v !== s.value) : [...filters.sources, s.value])
-                }
-              >
-                {s.label}
-              </button>
-            ))}
+          </div>
+          <div className="chip-row" role="group" aria-label="Map layers">
+            {LAYERS.map((l) => {
+              const on = !filters.hidden.includes(l.value);
+              const count = layerCounts[l.value] ?? 0;
+              return (
+                <button
+                  key={l.value}
+                  type="button"
+                  aria-pressed={on}
+                  className={on ? 'chip-btn layer on' : 'chip-btn layer'}
+                  onClick={() => setParam('hide', on ? [...filters.hidden, l.value] : filters.hidden.filter((v) => v !== l.value))}
+                >
+                  <span className="check" aria-hidden="true">{on ? '✓' : ''}</span>
+                  {l.label}
+                  <span className="layer-count">{l.value === 'clubs' && count === 0 ? 'soon' : count}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
         <div className="building-list" ref={listRef}>
-          {data && groups.length === 0 && <p className="empty">No events match these filters.</p>}
+          {data && events.length > 0 && groups.length === 0 && <p className="empty">No events match these filters.</p>}
           {!data && !error && <p className="empty">Loading events…</p>}
           {data && events.length === 0 && (
-            <p className="empty">No events imported yet. Run <code>npm run import:events</code>.</p>
+            <p className="empty">No events yet. Run <code>npm run import:events</code>, or host one.</p>
           )}
           {groups.map((g) => (
             <BuildingGroup
@@ -238,8 +255,19 @@ function BuildingGroup({ group, open, onToggle }) {
                 <span className="event-title">
                   {e.title}
                   <span className="muted">
-                    {[e.location, e.organizer, moreDates && `+${moreDates} more date${moreDates === 1 ? '' : 's'}`].filter(Boolean).join(' · ')}
+                    {[
+                      e.location,
+                      e.host ? `Hosted by ${e.host}` : e.organizer,
+                      e.goingCount > 0 && `${e.goingCount} going`,
+                      moreDates && `+${moreDates} more date${moreDates === 1 ? '' : 's'}`,
+                    ].filter(Boolean).join(' · ')}
                   </span>
+                  {(e.going || e.layer === 'student') && (
+                    <span className="row-tags">
+                      {e.layer === 'student' && <span className="tag student">Student-run</span>}
+                      {e.going && <span className="tag going">{e.isHost ? 'Hosting' : 'Going'}</span>}
+                    </span>
+                  )}
                 </span>
               </Link>
             </li>
