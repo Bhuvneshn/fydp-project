@@ -5,6 +5,7 @@ import { importBuildings } from './importBuildings.js';
 import { resolveBuilding } from './locate.js';
 import { fetchWusaEvents } from './sources/wusa.js';
 import { fetchUWaterlooEvents } from './sources/uwaterloo.js';
+import { fetchAthleticsEvents } from './sources/athletics.js';
 
 const DAYS_AHEAD = 120;
 const KEEP_PAST_DAYS = 30;
@@ -12,6 +13,7 @@ const KEEP_PAST_DAYS = 30;
 const SOURCES = {
   wusa: async (range) => ({ events: await fetchWusaEvents(range), failures: [] }),
   uwaterloo: fetchUWaterlooEvents,
+  athletics: async () => ({ events: await fetchAthleticsEvents(), failures: [] }),
 };
 
 const upsert = db.prepare(`
@@ -38,7 +40,8 @@ function toRow(e, importedAt) {
     end_at: e.endAt,
     all_day: e.allDay ? 1 : 0,
     location: e.location,
-    building_code: e.buildingCode ?? resolveBuilding(e.location, ...e.locationHints),
+    // Sources can pin buildingCode (null = known off campus); otherwise resolve from text.
+    building_code: e.buildingCode === undefined ? resolveBuilding(e.location, ...e.locationHints) : e.buildingCode,
     url: e.url,
     image_url: e.imageUrl,
     organizer: e.organizer,
