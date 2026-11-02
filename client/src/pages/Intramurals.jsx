@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { request, send } from '../api.js';
+import { PlusIcon } from '../components/Icons.jsx';
 
 const TABS = [
   { value: 'team', label: 'Teams need players' },
@@ -71,29 +72,31 @@ export default function Intramurals() {
 
   return (
     <div className="intramurals">
-      <header className="section-head">
-        <h1>Intramurals</h1>
-        <p className="muted">Short a few players? Post your team. Want to play? Find one.</p>
-      </header>
+      <div className="page-head">
+        <div>
+          <h1>Intramurals</h1>
+          <p>Short a few players? Post your team. Want to play? Find one. Registration stays on warrior.uwaterloo.ca.</p>
+        </div>
+        <button type="button" className={showForm ? 'btn btn-secondary btn-pill' : 'btn btn-primary btn-pill'} onClick={() => setShowForm((v) => !v)}>
+          {!showForm && <PlusIcon size={16} />}
+          {showForm ? 'Cancel' : 'New post'}
+        </button>
+      </div>
       <div className="schedule-toolbar">
-        <div className="segmented">
+        <div className="segmented" role="group" aria-label="Show">
           {TABS.map((t) => (
-            <button key={t.value} type="button" className={tab === t.value ? 'on' : ''} onClick={() => setParam('tab', t.value === 'team' ? '' : t.value)}>
+            <button key={t.value} type="button" aria-pressed={tab === t.value} onClick={() => setParam('tab', t.value === 'team' ? '' : t.value)}>
               {t.label}
-              {t.value === 'mine' && pendingForMe > 0 && <span className="dot-count">{pendingForMe}</span>}
+              {t.value === 'mine' && pendingForMe > 0 && <span className="count-badge">{pendingForMe}</span>}
             </button>
           ))}
         </div>
         {tab !== 'mine' && (
-          <select aria-label="Sport" value={sport} onChange={(e) => setParam('sport', e.target.value)}>
+          <select className="select" aria-label="Sport" value={sport} onChange={(e) => setParam('sport', e.target.value)}>
             <option value="">All sports</option>
             {options.sports.map((s) => <option key={s.name} value={s.name}>{s.name}</option>)}
           </select>
         )}
-        <span className="spacer" />
-        <button type="button" className="btn-primary" onClick={() => setShowForm((v) => !v)}>
-          {showForm ? 'Cancel' : '+ New post'}
-        </button>
       </div>
 
       {showForm && (
@@ -112,7 +115,7 @@ export default function Intramurals() {
       ) : visible.length === 0 ? (
         <div className="empty">
           <p>No {tab === 'team' ? 'teams looking for players' : 'free agents'}{sport ? ` for ${sport}` : ''} yet.</p>
-          <button type="button" className="chip-btn" onClick={() => setShowForm(true)}>Be the first to post</button>
+          <button type="button" className="btn btn-secondary btn-pill" onClick={() => setShowForm(true)}>Be the first to post</button>
         </div>
       ) : (
         <div className="team-grid">
@@ -154,27 +157,29 @@ function PostCard({ post, reload }) {
   return (
     <article className="team-card">
       <div className="team-card-top">
-        <span className="chip">{post.sport}</span>
+        <div className="team-card-heading">
+          <h3>{post.sport}</h3>
+          {(post.division || post.skill) && (
+            <div className="tag-row">
+              {post.division && <span className="tag athletics">{post.division}</span>}
+              {post.skill && <span className="tag">{post.skill}</span>}
+            </div>
+          )}
+        </div>
         <span className="muted small">{timeAgo(post.createdAt)}</span>
       </div>
 
       {isTeam ? (
         <>
-          <h3>Need {post.spotsLeft} more</h3>
           <div className="team-roster">
             <RosterDots have={post.playersHave} size={post.teamSize} />
-            <span className="muted small">{post.playersHave}/{post.teamSize} players</span>
+            <span className="strong">{post.playersHave} of {post.teamSize} · need {post.spotsLeft} more</span>
           </div>
           {post.teamName && <p className="team-name">{post.teamName}</p>}
         </>
       ) : (
-        <h3>{post.author} wants a team</h3>
+        <p className="team-name">{post.author} wants a team</p>
       )}
-
-      <div className="chip-row">
-        {post.division && <span className="tag">{post.division}</span>}
-        {post.skill && <span className="tag">{post.skill}</span>}
-      </div>
       {post.note && <p className="team-note">{post.note}</p>}
 
       <footer className="team-card-foot">
@@ -187,11 +192,11 @@ function PostCard({ post, reload }) {
               Requested · Withdraw
             </button>
           ) : (
-            <span className={`tag cap ${post.myResponse.status === 'accepted' ? 'home' : ''}`}>{post.myResponse.status}</span>
+            <span className={`tag cap ${post.myResponse.status === 'accepted' ? 'positive' : ''}`}>{post.myResponse.status}</span>
           )
         ) : (
           !composing && (
-            <button type="button" className="btn-primary small" onClick={() => setComposing(true)}>
+            <button type="button" className="btn btn-primary btn-sm" onClick={() => setComposing(true)}>
               {isTeam ? "I'm in" : 'Invite to my team'}
             </button>
           )
@@ -210,6 +215,8 @@ function PostCard({ post, reload }) {
           }}
         >
           <textarea
+            className="input textarea"
+            aria-label="Message"
             rows={2}
             maxLength={300}
             placeholder={isTeam ? 'Position, experience, availability… (optional)' : 'Tell them about your team (optional)'}
@@ -218,7 +225,7 @@ function PostCard({ post, reload }) {
           />
           <div className="row-end">
             <button type="button" className="link-btn" onClick={() => setComposing(false)}>Cancel</button>
-            <button type="submit" className="btn-primary small" disabled={busy}>Send request</button>
+            <button type="submit" className="btn btn-primary btn-sm" disabled={busy}>Send request</button>
           </div>
         </form>
       )}
@@ -257,24 +264,24 @@ function PostForm({ options, onCreated }) {
 
   return (
     <form className="panel team-form" onSubmit={submit}>
-      <div className="segmented">
-        <button type="button" className={kind === 'team' ? 'on' : ''} onClick={() => setKind('team')}>My team needs players</button>
-        <button type="button" className={kind === 'player' ? 'on' : ''} onClick={() => setKind('player')}>I'm looking for a team</button>
+      <div className="segmented" role="group" aria-label="Post type">
+        <button type="button" aria-pressed={kind === 'team'} onClick={() => setKind('team')}>My team needs players</button>
+        <button type="button" aria-pressed={kind === 'player'} onClick={() => setKind('player')}>I'm looking for a team</button>
       </div>
 
-      <div className="form-grid">
-        <label>Sport
+      <div className="field-grid">
+        <label className="field"><span>Sport</span>
           <select value={sport} onChange={(e) => pickSport(e.target.value)}>
             {options.sports.map((s) => <option key={s.name}>{s.name}</option>)}
           </select>
         </label>
-        <label>Division
+        <label className="field"><span>Division</span>
           <select name="division" defaultValue="">
             <option value="">Any</option>
             {options.divisions.map((d) => <option key={d}>{d}</option>)}
           </select>
         </label>
-        <label>Skill level
+        <label className="field"><span>Skill level</span>
           <select name="skill" defaultValue="">
             <option value="">Any</option>
             {options.skills.map((s) => <option key={s}>{s}</option>)}
@@ -282,25 +289,25 @@ function PostForm({ options, onCreated }) {
         </label>
         {kind === 'team' && (
           <>
-            <label>Team name
-              <input name="teamName" maxLength={60} placeholder="Optional" />
+            <label className="field"><span>Team name <span className="optional">(optional)</span></span>
+              <input name="teamName" maxLength={60} />
             </label>
-            <label>Players you have
+            <label className="field"><span>Players you have</span>
               <input name="playersHave" type="number" min={1} max={29} required defaultValue={1} />
             </label>
-            <label>Team size
+            <label className="field"><span>Team size</span>
               <input type="number" min={2} max={30} required value={teamSize} onChange={(e) => setTeamSize(e.target.value)} />
             </label>
           </>
         )}
       </div>
 
-      <label>Note
+      <label className="field"><span>Note</span>
         <textarea name="note" rows={3} maxLength={500} placeholder={kind === 'team' ? 'When you play, vibe, what positions you need…' : 'Positions, experience, which nights you can play…'} />
       </label>
-      {error && <p className="error">{error}</p>}
+      {error && <p className="error" role="alert">{error}</p>}
       <div className="row-end">
-        <button type="submit" className="btn-primary" disabled={busy}>Post</button>
+        <button type="submit" className="btn btn-primary btn-lg" disabled={busy}>Post</button>
       </div>
     </form>
   );
@@ -331,23 +338,23 @@ function MyActivity({ mine, reload }) {
               <strong>{p.sport}</strong>
               <span className="muted"> · {p.kind === 'team' ? `${p.teamName ?? 'Team'} · ${p.playersHave}/${p.teamSize} players` : 'Free agent'}</span>
             </div>
-            <span className={`tag cap ${p.status === 'open' ? 'home' : ''}`}>{p.status}</span>
+            <span className={`tag cap ${p.status === 'open' ? 'positive' : ''}`}>{p.status}</span>
           </div>
           <div className="chip-row">
             {p.kind === 'team' && (
               <>
-                <button type="button" className="chip-btn" disabled={p.playersHave <= 1} onClick={() => act(() => send(`/api/teams/${p.id}`, 'PATCH', { playersHave: p.playersHave - 1 }))}>− player</button>
-                <button type="button" className="chip-btn" disabled={p.playersHave >= p.teamSize} onClick={() => act(() => send(`/api/teams/${p.id}`, 'PATCH', { playersHave: p.playersHave + 1 }))}>+ player</button>
+                <button type="button" className="btn btn-secondary btn-sm" disabled={p.playersHave <= 1} onClick={() => act(() => send(`/api/teams/${p.id}`, 'PATCH', { playersHave: p.playersHave - 1 }))}>− player</button>
+                <button type="button" className="btn btn-secondary btn-sm" disabled={p.playersHave >= p.teamSize} onClick={() => act(() => send(`/api/teams/${p.id}`, 'PATCH', { playersHave: p.playersHave + 1 }))}>+ player</button>
               </>
             )}
             {p.status === 'open' ? (
-              <button type="button" className="chip-btn" onClick={() => act(() => send(`/api/teams/${p.id}`, 'PATCH', { status: p.kind === 'team' ? 'filled' : 'closed' }))}>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={() => act(() => send(`/api/teams/${p.id}`, 'PATCH', { status: p.kind === 'team' ? 'filled' : 'closed' }))}>
                 {p.kind === 'team' ? 'Mark filled' : 'Found a team'}
               </button>
             ) : (
-              <button type="button" className="chip-btn" onClick={() => act(() => send(`/api/teams/${p.id}`, 'PATCH', { status: 'open' }))}>Reopen</button>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={() => act(() => send(`/api/teams/${p.id}`, 'PATCH', { status: 'open' }))}>Reopen</button>
             )}
-            <button type="button" className="chip-btn danger" onClick={() => confirm('Delete this post?') && act(() => send(`/api/teams/${p.id}`, 'DELETE'))}>Delete</button>
+            <button type="button" className="btn btn-danger btn-sm" onClick={() => confirm('Delete this post?') && act(() => send(`/api/teams/${p.id}`, 'DELETE'))}>Delete</button>
           </div>
 
           {p.responses.length > 0 && (
@@ -361,11 +368,11 @@ function MyActivity({ mine, reload }) {
                   </div>
                   {r.status === 'pending' ? (
                     <div className="chip-row">
-                      <button type="button" className="chip-btn on" onClick={() => act(() => send(`/api/teams/${p.id}/responses/${r.id}`, 'PATCH', { status: 'accepted' }))}>Accept</button>
-                      <button type="button" className="chip-btn" onClick={() => act(() => send(`/api/teams/${p.id}/responses/${r.id}`, 'PATCH', { status: 'declined' }))}>Decline</button>
+                      <button type="button" className="btn btn-primary btn-sm" onClick={() => act(() => send(`/api/teams/${p.id}/responses/${r.id}`, 'PATCH', { status: 'accepted' }))}>Accept</button>
+                      <button type="button" className="btn btn-secondary btn-sm" onClick={() => act(() => send(`/api/teams/${p.id}/responses/${r.id}`, 'PATCH', { status: 'declined' }))}>Decline</button>
                     </div>
                   ) : (
-                    <span className={`tag cap ${r.status === 'accepted' ? 'home' : ''}`}>{r.status}</span>
+                    <span className={`tag cap ${r.status === 'accepted' ? 'positive' : ''}`}>{r.status}</span>
                   )}
                 </li>
               ))}
@@ -383,7 +390,7 @@ function MyActivity({ mine, reload }) {
               <strong>{r.post.sport}</strong>
               <span className="muted"> · {r.post.kind === 'team' ? `${r.post.teamName ?? `${r.post.author}'s team`}` : `${r.post.author} (free agent)`}</span>
             </div>
-            <span className={`tag cap ${r.status === 'accepted' ? 'home' : ''}`}>{r.status}</span>
+            <span className={`tag cap ${r.status === 'accepted' ? 'positive' : ''}`}>{r.status}</span>
           </div>
           {r.contactEmail ? (
             <p>You're in! Reach out at <a href={`mailto:${r.contactEmail}`}>{r.contactEmail}</a>.</p>

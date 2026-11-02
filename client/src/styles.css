@@ -432,56 +432,36 @@ button.map-pin:hover { transform: scale(1.08); }
 /* Small map beside a form */
 .event-mini-map .campus-map { height: 260px; border-radius: 12px; }
 
-/* Section pages (intramurals) */
-.section-head { margin-bottom: 12px; }
-.section-head h1 { margin: 0; }
-.section-head p { margin: 4px 0 0; }
-
-.schedule-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 8px; }
-.schedule-toolbar select { padding: 7px 10px; font: inherit; color: inherit; background: var(--card); border: 1px solid var(--border); border-radius: 999px; }
-
-.tag.home { color: var(--success); background: var(--success-bg); }
-.tag.cancelled { color: var(--error); }
-
-/* Intramural team finder */
-.schedule-toolbar .spacer { flex: 1; }
-.dot-count { display: inline-grid; place-items: center; min-width: 18px; height: 18px; margin-left: 6px; padding: 0 5px; font-size: 0.72rem; font-weight: 700; color: var(--accent-text); background: var(--accent); border-radius: 999px; }
-.chip-btn.danger { color: var(--error); }
-
-.team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-top: 12px; }
-.team-card { display: flex; flex-direction: column; gap: 10px; padding: 18px; background: var(--card); border: 1px solid var(--border); border-radius: 16px; transition: transform 0.15s, box-shadow 0.15s; }
-.team-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); }
-.team-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.team-card h3 { margin: 0; font-size: 1.35rem; letter-spacing: -0.01em; }
-.team-roster { display: flex; align-items: center; gap: 10px; }
-.roster { display: inline-flex; gap: 4px; }
-.roster span { width: 12px; height: 12px; border: 2px solid var(--accent); border-radius: 50%; }
-.roster span.filled { background: var(--accent); }
-.team-name { margin: 0; font-weight: 600; }
-.team-note { margin: 0; color: var(--muted); font-size: 0.92rem; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
-.team-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border); }
+/* Intramurals */
+.intramurals { display: flex; flex-direction: column; gap: 20px; }
+.schedule-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 14px; }
+.team-card { display: flex; flex-direction: column; gap: 12px; padding: 20px; background: var(--bg); border: 1px solid var(--line); border-radius: 20px; }
+.team-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.team-card-heading { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.team-card h3 { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.01em; }
+.team-card .small { white-space: nowrap; }
+.team-roster { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; }
+.team-roster .strong { font-size: 0.875rem; font-weight: 600; }
+.roster { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.roster span { width: 12px; height: 12px; box-sizing: border-box; border: 2px solid var(--line-2); border-radius: 50%; }
+.roster span.filled { background: var(--ink); border-color: var(--ink); }
+.team-name { font-weight: 600; }
+.team-note { font-size: 0.9rem; line-height: 1.5; color: var(--muted-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+.team-card-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line); }
+.team-card-foot .muted { font-size: 0.82rem; }
 .team-compose { display: flex; flex-direction: column; gap: 8px; }
-.team-compose textarea, .team-form textarea, .team-form select, .team-form input {
-  display: block; width: 100%; margin-top: 6px; padding: 8px 10px; font: inherit; color: inherit;
-  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
-}
-.row-end { display: flex; justify-content: flex-end; align-items: center; gap: 12px; }
-
-.team-form { display: flex; flex-direction: column; gap: 14px; margin: 12px 0 4px; }
-.team-form label { font-size: 0.88rem; color: var(--muted); }
-.form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
-
-.my-activity h2 { margin: 24px 0 10px; font-size: 1.05rem; }
-.my-post { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
-.my-post-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.my-post p { margin: 0; }
-.responses { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--border); }
-.responses li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px dashed var(--border); }
-.responses li p { margin: 4px 0 0; font-size: 0.9rem; }
-@media (max-width: 600px) {
-  .schedule-toolbar .segmented { width: 100%; overflow-x: auto; }
-  .responses li { flex-direction: column; align-items: flex-start; }
-}
+.input.textarea { min-height: 0; padding: 10px 12px; font-size: 0.95rem; line-height: 1.5; resize: vertical; }
+.row-end { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 12px; }
+.team-form { display: flex; flex-direction: column; gap: 16px; }
+.team-form .segmented { align-self: flex-start; }
+.my-activity { display: flex; flex-direction: column; gap: 12px; }
+.my-activity h2 { margin-top: 12px; font-size: 1.1rem; font-weight: 700; }
+.my-post { display: flex; flex-direction: column; gap: 12px; }
+.my-post-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+.responses { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.responses li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.responses li p { margin-top: 4px; font-size: 0.9rem; color: var(--ink-2); }
 
 /* Host an event */
 .host-event { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
