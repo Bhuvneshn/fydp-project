@@ -90,19 +90,6 @@
     --map-bg: #24201e;
   }
 }
-/* Older names, still used by pages that haven't moved to the new styles yet. */
-:root {
-  --card: var(--bg);
-  --text: var(--ink);
-  --border: var(--line);
-  --chip: var(--surface);
-  --accent: var(--primary);
-  --accent-text: var(--on-primary);
-  --success: var(--ath-ink);
-  --success-bg: var(--ath-bg);
-  --warn: var(--muted-2);
-  --warn-bg: var(--surface);
-}
 * { box-sizing: border-box; }
 body {
   margin: 0;
@@ -452,9 +439,6 @@ button.map-pin:hover { transform: scale(1.08); }
 .avatar.campus { color: var(--campus-ink); background: var(--campus-bg); }
 .avatar.athletics { color: var(--ath-ink); background: var(--ath-bg); }
 .avatar.student { color: var(--stu-ink); background: var(--stu-bg); }
-
-/* Small map beside a form */
-.event-mini-map .campus-map { height: 260px; border-radius: 12px; }
 
 /* Intramurals */
 .intramurals { display: flex; flex-direction: column; gap: 20px; }
