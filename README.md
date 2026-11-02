@@ -83,7 +83,7 @@ Business Discovery can only see Business/Creator accounts; clubs using personal 
 
 ## Events map
 
-`/events` shows upcoming events on a 3D campus map, grouped by building (UI adapted from [Spots](https://github.com/notAkki/spots), MIT; see `THIRD_PARTY_NOTICES.md`). Markers glow green (happening now), amber (today) or indigo (upcoming). Filters: today / next 7 days, search, and "Near me" sorts buildings by distance.
+`/events` lists upcoming events by day beside a 3D campus map (map camera adapted from [Spots](https://github.com/notAkki/spots), MIT; see `THIRD_PARTY_NOTICES.md`). Each building with events gets a pin showing how many; a blue ring marks buildings where you're going, and selecting a pin narrows the list to that building. Filters: today / next 7 days, search, and "Near me" sorts each day by distance. The map uses OpenFreeMap's light or dark style to match the app's theme.
 
 **Layers** toggle what's on the map:
 
@@ -96,7 +96,7 @@ Business Discovery can only see Business/Creator accounts; clubs using personal 
 
 **Hosting and joining.** Anyone signed in can host an event (`/events/new`): name, category, date and time (Waterloo time; an end before the start runs past midnight), a campus building plus room, or "somewhere else" with free-text location (listed without a pin), optional capacity and description. Any event, imported or student-run, can be joined; the event page shows who's going and how many spots are left. Hosts are automatically going and can cancel their event. Limits: 10 upcoming hosted events per person, 12 hours long, 180 days out.
 
-The map uses MapLibre GL with OpenFreeMap's free dark style, so no Mapbox token is needed.
+The map uses MapLibre GL with OpenFreeMap's free styles, so no Mapbox token is needed.
 
 ### Sources (`npm run import:events`)
 
