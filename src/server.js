@@ -1,0 +1,35 @@
+import express from 'express';
+import session from 'express-session';
+import path from 'node:path';
+import { authRouter } from './auth.js';
+
+const app = express();
+const port = Number(process.env.PORT ?? 3000);
+const isProd = process.env.NODE_ENV === 'production';
+
+if (isProd && !process.env.SESSION_SECRET) {
+  throw new Error('SESSION_SECRET must be set in production.');
+}
+
+app.use(express.json());
+app.use(
+  session({
+    name: 'sid',
+    secret: process.env.SESSION_SECRET ?? 'dev-only-secret-change-me',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: isProd,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    },
+  })
+);
+
+app.use('/api/auth', authRouter);
+app.use(express.static(path.resolve('public'), { extensions: ['html'] }));
+
+app.listen(port, () => {
+  console.log(`FYDP site running at http://localhost:${port}`);
+});

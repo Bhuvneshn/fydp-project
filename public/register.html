@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create account · FYDP Project</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main class="card">
+    <h1>Create account</h1>
+    <p class="subtitle">Only @uwaterloo.ca emails can register.</p>
+    <form id="register-form">
+      <label>Email
+        <input name="email" type="email" placeholder="you@uwaterloo.ca" required autocomplete="email">
+      </label>
+      <label>Password
+        <input name="password" type="password" minlength="8" required autocomplete="new-password">
+      </label>
+      <label>Confirm password
+        <input name="confirm" type="password" minlength="8" required autocomplete="new-password">
+      </label>
+      <p class="error"></p>
+      <button type="submit">Create account</button>
+    </form>
+    <p class="footer">Already have an account? <a href="/login">Log in</a></p>
+  </main>
+  <script src="/app.js"></script>
+  <script>
+    handleForm(document.getElementById('register-form'), async ({ email, password, confirm }) => {
+      if (!isUWaterlooEmail(email)) throw new Error('Only @uwaterloo.ca email addresses can register.');
+      if (password !== confirm) throw new Error('Passwords do not match.');
+      const { verificationRequired } = await api('/register', { email, password });
+      location.href = verificationRequired ? '/verify' : '/dashboard';
+    });
+  </script>
+</body>
+</html>
