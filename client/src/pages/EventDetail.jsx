@@ -3,8 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router';
 import { request, send } from '../api.js';
 import CampusMap from '../components/CampusMap.jsx';
 import { DateBlock, LayerTag } from '../components/EventCard.jsx';
-import { BackIcon, CheckIcon, ExternalIcon, ShareIcon } from '../components/Icons.jsx';
-import { dateKey, eventStatus, formatEventWhen, formatLongDate, formatTimeRange } from '../eventTime.js';
+import { BackIcon, CheckIcon, ExternalIcon, ShareIcon, UsersIcon } from '../components/Icons.jsx';
+import { dateKey, eventStatus, formatEventWhen, formatLongDate, formatTime, formatTimeRange } from '../eventTime.js';
 
 export default function EventDetail() {
   const { id } = useParams();
@@ -76,6 +76,7 @@ export default function EventDetail() {
               {event.extra.virtualUrl && <a className="text-link" href={event.extra.virtualUrl} target="_blank" rel="noreferrer">Join online<ExternalIcon size={14} /></a>}
             </div>
           </section>
+          <BuddyCard event={event} onChange={setEvent} />
         </aside>
 
         <div className="detail-main">
@@ -168,6 +169,87 @@ export function Avatars({ handles, max = 8 }) {
       ))}
       {handles.length > max && <span className="avatar more">+{handles.length - max}</span>}
     </span>
+  );
+}
+
+const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+
+// "Pair me with someone": for students going alone. Shown to everyone, but only
+// switchable once you've joined the event.
+function BuddyCard({ event, onChange }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const { pairing } = event;
+  const ended = new Date(event.endAt ?? event.startAt) < new Date();
+  const full = event.capacity != null && event.goingCount >= event.capacity;
+  if (event.isHost || ended || (full && !event.going)) return null;
+
+  const meetAt = pairing.meetAt ? formatTime(pairing.meetAt) : null;
+  const place = event.building?.name ?? event.location;
+  const locked = !event.going;
+  const lockedHint = 'Join the event first to get paired with someone.';
+
+  async function toggle() {
+    setBusy(true);
+    setError('');
+    try {
+      await send(`/api/events/${encodeURIComponent(event.id)}/buddy`, pairing.optedIn ? 'DELETE' : 'POST');
+      onChange((await request(`/api/events/${encodeURIComponent(event.id)}`)).event);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className={`panel buddy-card${pairing.optedIn ? ' on' : ''}${locked ? ' locked' : ''}`} aria-labelledby="buddy-title">
+      <div className="buddy-head">
+        <span className="buddy-icon"><UsersIcon size={20} /></span>
+        <span>
+          <h2 id="buddy-title">Pair me with someone</h2>
+          <p className="small-text">
+            Going alone? We'll pair you with another student who's also going alone, so you know someone there.
+          </p>
+        </span>
+        {/* Disabled buttons don't get hover events, so the tooltip sits on a wrapper. */}
+        <span className="switch-wrap" title={locked ? lockedHint : undefined}>
+          <button
+            type="button"
+            role="switch"
+            className="switch"
+            aria-checked={pairing.optedIn}
+            aria-labelledby="buddy-title"
+            aria-describedby={locked ? 'buddy-locked' : undefined}
+            disabled={busy || locked}
+            onClick={toggle}
+          >
+            <span className="switch-thumb" />
+          </button>
+        </span>
+      </div>
+
+      {pairing.buddy ? (
+        <div className="buddy-status" role="status">
+          <p><CheckIcon size={14} /> You're paired with <strong>{pairing.buddy.handle}</strong></p>
+          <p className="small-text">
+            Say hi at <a href={`mailto:${pairing.buddy.email}`}>{pairing.buddy.email}</a>
+            {meetAt ? ` and meet outside ${place ?? 'the venue'} at ${meetAt}.` : '.'}
+          </p>
+        </div>
+      ) : pairing.optedIn ? (
+        <div className="buddy-status" role="status">
+          <p>Looking for a buddy</p>
+          <p className="small-text">We'll pair you as soon as someone else going alone turns this on.</p>
+        </div>
+      ) : (
+        pairing.waitingCount > 0 && (
+          <p className="small-text">{plural(pairing.waitingCount, 'student is', 'students are')} looking for a buddy.</p>
+        )
+      )}
+      {locked && <p id="buddy-locked" className="muted small">{lockedHint}</p>}
+      {error && <p className="error" role="alert">{error}</p>}
+    </section>
   );
 }
 
