@@ -143,7 +143,7 @@ export default function Events() {
           <div>
             <h1>Events</h1>
             <p className="muted">
-              {data ? `${visible.length} events on and around campus` : 'Loading…'}
+              {data ? `${visible.length} event${visible.length === 1 ? '' : 's'} on and around campus` : 'Loading…'}
             </p>
           </div>
           <div className="events-head-actions">
