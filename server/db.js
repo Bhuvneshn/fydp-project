@@ -68,4 +68,26 @@ db.exec(`
     lng        REAL NOT NULL,
     updated_at TEXT NOT NULL
   );
+
+  -- Imported events (see server/events/importEvents.js). id is "<source>:<source id>".
+  CREATE TABLE IF NOT EXISTS events (
+    id            TEXT PRIMARY KEY,
+    source        TEXT NOT NULL,      -- wusa | uwaterloo | athletics
+    feed          TEXT,               -- sub-feed, e.g. "Engineering"
+    title         TEXT NOT NULL,
+    description   TEXT,
+    start_at      TEXT NOT NULL,      -- ISO 8601 UTC
+    end_at        TEXT,
+    all_day       INTEGER NOT NULL DEFAULT 0,
+    location      TEXT,               -- raw location text from the source
+    building_code TEXT REFERENCES buildings(code),
+    url           TEXT,
+    image_url     TEXT,
+    organizer     TEXT,
+    categories    TEXT NOT NULL DEFAULT '[]',
+    cost          TEXT,
+    extra         TEXT NOT NULL DEFAULT '{}', -- source-specific fields
+    imported_at   TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS events_start_at ON events(start_at);
 `);
