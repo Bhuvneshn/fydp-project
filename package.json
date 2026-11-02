@@ -12,7 +12,8 @@
     "scrape:clubs": "node --env-file-if-exists=.env server/clubs/scrapeWusa.js",
     "check:instagram": "node --env-file-if-exists=.env server/clubs/instagram.js",
     "import:buildings": "node --env-file-if-exists=.env server/events/importBuildings.js",
-    "import:events": "node --env-file-if-exists=.env server/events/importEvents.js"
+    "import:events": "node --env-file-if-exists=.env server/events/importEvents.js",
+    "import:all": "npm run scrape:clubs && npm run import:events"
   },
   "keywords": [],
   "author": "",
