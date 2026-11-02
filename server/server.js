@@ -2,6 +2,7 @@ import express from 'express';
 import session from 'express-session';
 import path from 'node:path';
 import { authRouter } from './auth.js';
+import { SqliteSessionStore } from './sessionStore.js';
 import { clubsRouter } from './clubs/routes.js';
 import { eventsRouter } from './events/routes.js';
 import { teamsRouter } from './athletics/teams.js';
@@ -18,14 +19,17 @@ app.use(express.json());
 app.use(
   session({
     name: 'sid',
+    store: new SqliteSessionStore(),
     secret: process.env.SESSION_SECRET ?? 'dev-only-secret-change-me',
     resave: false,
     saveUninitialized: false,
+    // Stay logged in while active: each request pushes expiry another 30 days out.
+    rolling: true,
     cookie: {
       httpOnly: true,
       sameSite: 'lax',
       secure: isProd,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: 30 * 24 * 60 * 60 * 1000,
     },
   })
 );
