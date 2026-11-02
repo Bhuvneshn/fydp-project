@@ -1,39 +1,121 @@
+/* Colour tokens. Light is the default; dark follows the system unless the header toggle overrides it. */
 :root {
-  --bg: #f6f6f4;
-  --card: #ffffff;
-  --text: #1c1c1c;
-  --muted: #666;
-  --accent: #e4b429; /* Waterloo gold */
-  --accent-text: #1c1c1c;
-  --border: #ddd;
-  --error: #b3261e;
-  --chip: #f0efe9;
-  --success: #1e6b3a;
-  --success-bg: #ddf3e4;
-  --warn: #7a5a00;
-  --warn-bg: #fbf0cf;
+  color-scheme: light;
+  --bg: #ffffff;
+  --surface: #f5f5f4;
+  --soft: #fafaf9;
+  --ink: #1c1917;
+  --ink-2: #44403c;
+  --muted: #78716c;
+  --muted-2: #57534e; /* secondary text on grey surfaces */
+  --line: #e7e5e4;
+  --line-2: #d6d3d1;
+  --primary: #1c1917;
+  --on-primary: #ffffff;
+  /* Blue only means "you're going" (and hosting). */
+  --going: #3b82f6;
+  --going-bg: #eff6ff;
+  --going-ink: #1d4ed8;
+  --going-line: #bfdbfe;
+  /* One colour per event layer: campus, athletics, student-run. */
+  --campus-bg: #e0ecfb;
+  --campus-ink: #1e3a5f;
+  --campus-dot: #6b9bd8;
+  --ath-bg: #e3f1e6;
+  --ath-ink: #1f4d2c;
+  --ath-dot: #6baf7d;
+  --stu-bg: #fbe4ec;
+  --stu-ink: #7a2346;
+  --stu-dot: #d88aa6;
+  --error: #b42318;
+  --error-bg: #fef3f2;
+  --shadow: rgba(28, 25, 23, 0.16);
+  --map-bg: #f0efed;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #1c1917;
+  --surface: #292524;
+  --soft: #221e1c;
+  --ink: #fafaf9;
+  --ink-2: #e7e5e4;
+  --muted: #a8a29e;
+  --muted-2: #d6d3d1;
+  --line: #3a3431;
+  --line-2: #57534e;
+  --primary: #fafaf9;
+  --on-primary: #1c1917;
+  --going: #60a5fa;
+  --going-bg: #172340;
+  --going-ink: #bfdbfe;
+  --going-line: #1e3a8a;
+  --campus-bg: #1f2f47;
+  --campus-ink: #c7dbf7;
+  --ath-bg: #1e3426;
+  --ath-ink: #c3e6cb;
+  --stu-bg: #3d1f2b;
+  --stu-ink: #f6c6d6;
+  --error: #fda29b;
+  --error-bg: #3b1a17;
+  --shadow: rgba(0, 0, 0, 0.45);
+  --map-bg: #24201e;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #141414;
-    --card: #1f1f1f;
-    --text: #eee;
-    --muted: #aaa;
-    --border: #333;
-    --error: #f2b8b5;
-    --chip: #2a2a2a;
-    --success: #7dd3a0;
-    --success-bg: #1d3326;
-    --warn: #f0c36d;
-    --warn-bg: #3a3020;
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #1c1917;
+    --surface: #292524;
+    --soft: #221e1c;
+    --ink: #fafaf9;
+    --ink-2: #e7e5e4;
+    --muted: #a8a29e;
+    --muted-2: #d6d3d1;
+    --line: #3a3431;
+    --line-2: #57534e;
+    --primary: #fafaf9;
+    --on-primary: #1c1917;
+    --going: #60a5fa;
+    --going-bg: #172340;
+    --going-ink: #bfdbfe;
+    --going-line: #1e3a8a;
+    --campus-bg: #1f2f47;
+    --campus-ink: #c7dbf7;
+    --ath-bg: #1e3426;
+    --ath-ink: #c3e6cb;
+    --stu-bg: #3d1f2b;
+    --stu-ink: #f6c6d6;
+    --error: #fda29b;
+    --error-bg: #3b1a17;
+    --shadow: rgba(0, 0, 0, 0.45);
+    --map-bg: #24201e;
   }
+}
+/* Older names, still used by pages that haven't moved to the new styles yet. */
+:root {
+  --card: var(--bg);
+  --text: var(--ink);
+  --border: var(--line);
+  --chip: var(--surface);
+  --accent: var(--primary);
+  --accent-text: var(--on-primary);
+  --success: var(--ath-ink);
+  --success-bg: var(--ath-bg);
+  --warn: var(--muted-2);
+  --warn-bg: var(--surface);
 }
 * { box-sizing: border-box; }
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: Figtree, system-ui, -apple-system, sans-serif;
   background: var(--bg);
-  color: var(--text);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+button:not(:disabled) { cursor: pointer; }
+input::placeholder, textarea::placeholder { color: var(--muted); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
 .card {
   width: 100%;
