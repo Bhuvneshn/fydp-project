@@ -16,7 +16,9 @@ if (isProd && !process.env.SESSION_SECRET) {
 }
 
 app.use(express.json());
+// Sessions only matter for the API; static files shouldn't touch the session table.
 app.use(
+  '/api',
   session({
     name: 'sid',
     store: new SqliteSessionStore(),
