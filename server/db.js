@@ -90,4 +90,34 @@ db.exec(`
     imported_at   TEXT NOT NULL
   );
   CREATE INDEX IF NOT EXISTS events_start_at ON events(start_at);
+
+  -- Intramural team finder (see server/athletics/teams.js).
+  -- kind 'team': a team with players_have of team_size looking for more.
+  -- kind 'player': a free agent looking for a team.
+  CREATE TABLE IF NOT EXISTS team_posts (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    kind         TEXT    NOT NULL CHECK (kind IN ('team', 'player')),
+    sport        TEXT    NOT NULL,
+    division     TEXT,
+    skill        TEXT,
+    team_name    TEXT,
+    players_have INTEGER,
+    team_size    INTEGER,
+    note         TEXT,
+    status       TEXT    NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'filled', 'closed')),
+    created_at   TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+    updated_at   TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+  );
+
+  -- "I'm in" requests on a post; the poster accepts or declines.
+  CREATE TABLE IF NOT EXISTS team_responses (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    post_id    INTEGER NOT NULL REFERENCES team_posts(id) ON DELETE CASCADE,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    message    TEXT,
+    status     TEXT    NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined')),
+    created_at TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+    UNIQUE (post_id, user_id)
+  );
 `);

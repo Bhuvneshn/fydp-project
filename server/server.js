@@ -5,6 +5,7 @@ import { authRouter } from './auth.js';
 import { clubsRouter } from './clubs/routes.js';
 import { eventsRouter } from './events/routes.js';
 import { athleticsRouter } from './athletics/routes.js';
+import { teamsRouter } from './athletics/teams.js';
 
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
@@ -34,6 +35,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/clubs', clubsRouter);
 app.use('/api/events', eventsRouter);
 app.use('/api/athletics', athleticsRouter);
+app.use('/api/teams', teamsRouter);
 
 // Serve the built React app (client/dist). In development Vite serves it instead.
 const clientDist = path.resolve(import.meta.dirname, '../client/dist');
