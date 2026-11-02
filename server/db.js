@@ -72,7 +72,7 @@ db.exec(`
   -- Imported events (see server/events/importEvents.js). id is "<source>:<source id>".
   CREATE TABLE IF NOT EXISTS events (
     id            TEXT PRIMARY KEY,
-    source        TEXT NOT NULL,      -- wusa | uwaterloo | athletics
+    source        TEXT NOT NULL,      -- wusa | uwaterloo | athletics | club | student
     feed          TEXT,               -- sub-feed, e.g. "Engineering"
     title         TEXT NOT NULL,
     description   TEXT,
@@ -87,9 +87,20 @@ db.exec(`
     categories    TEXT NOT NULL DEFAULT '[]',
     cost          TEXT,
     extra         TEXT NOT NULL DEFAULT '{}', -- source-specific fields
-    imported_at   TEXT NOT NULL
+    imported_at   TEXT NOT NULL,
+    -- Student-run events created in the app (see server/events/hosted.js).
+    host_user_id  INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    capacity      INTEGER
   );
   CREATE INDEX IF NOT EXISTS events_start_at ON events(start_at);
+
+  -- "Going" on any event, imported or student-run.
+  CREATE TABLE IF NOT EXISTS event_rsvps (
+    event_id   TEXT    NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+    PRIMARY KEY (event_id, user_id)
+  );
 
   -- Intramural team finder (see server/athletics/teams.js).
   -- kind 'team': a team with players_have of team_size looking for more.
@@ -121,3 +132,11 @@ db.exec(`
     UNIQUE (post_id, user_id)
   );
 `);
+
+// Columns added after the first release; CREATE TABLE IF NOT EXISTS won't add them to old databases.
+function addColumn(table, column, definition) {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all();
+  if (!columns.some((c) => c.name === column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+}
+addColumn('events', 'host_user_id', 'INTEGER REFERENCES users(id) ON DELETE CASCADE');
+addColumn('events', 'capacity', 'INTEGER');
