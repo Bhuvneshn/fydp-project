@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { request } from '../api.js';
 import CampusMap from '../components/CampusMap.jsx';
+import { BackIcon } from '../components/Icons.jsx';
 import { dateKey } from '../eventTime.js';
 
 const ELSEWHERE = '';
@@ -46,72 +47,101 @@ export default function HostEvent() {
   const defaultDate = dateKey(lateNight ? Date.now() + 864e5 : Date.now());
 
   return (
-    <form className="host-event" onSubmit={submit}>
-      <Link to="/events" className="back">← Events</Link>
-      <input className="host-title" name="title" maxLength={100} placeholder="Event name" required autoFocus />
-
-      <div className="chip-row">
-        {options.categories.map((c) => (
-          <button key={c} type="button" className={category === c ? 'chip-btn on' : 'chip-btn'} onClick={() => setCategory(c)}>{c}</button>
-        ))}
+    <div className="host-event">
+      <Link to="/events" className="back"><BackIcon />Events</Link>
+      <div className="page-head">
+        <div>
+          <span className="tag student">Student-run</span>
+          <h1>Host an event</h1>
+          <p>Small, low-key and open to other students. It shows up on the map once you create it.</p>
+        </div>
       </div>
 
       <div className="host-layout">
-        <div className="host-fields">
-          <section className="panel form-grid">
-            <label>Date
+        <form className="form host-form" onSubmit={submit}>
+          <label className="field"><span>Event name</span>
+            <input name="title" maxLength={100} placeholder="e.g. CS 135 midterm study session" required autoFocus />
+          </label>
+
+          <fieldset className="field-group">
+            <legend>Category</legend>
+            <div className="tile-grid">
+              {options.categories.map((c) => (
+                <button key={c} type="button" className="chip tile" aria-pressed={category === c} onClick={() => setCategory(c)}>{c}</button>
+              ))}
+            </div>
+          </fieldset>
+
+          <div className="field-grid">
+            <label className="field"><span>Date</span>
               <input type="date" name="date" required defaultValue={defaultDate} min={dateKey(Date.now())} />
             </label>
-            <label>Starts
+            <label className="field"><span>Starts</span>
               <input type="time" name="startTime" required defaultValue={nextHour()} />
             </label>
-            <label>Ends
+            <label className="field"><span>Ends</span>
               <input type="time" name="endTime" required defaultValue={nextHour(3)} />
             </label>
-          </section>
+          </div>
 
-          <section className="panel form-grid">
-            <label>Where
+          <div className="field-grid">
+            <label className="field wide"><span>Where</span>
               <select value={buildingCode} onChange={(e) => setBuildingCode(e.target.value)}>
                 {options.buildings.map((b) => <option key={b.code} value={b.code}>{b.code} – {b.name}</option>)}
                 <option value={ELSEWHERE}>Somewhere else (not on the map)</option>
               </select>
             </label>
             {building ? (
-              <label>Room
-                <input name="room" maxLength={40} placeholder="e.g. 1350 (optional)" />
+              <label className="field"><span>Room <span className="optional">(optional)</span></span>
+                <input name="room" maxLength={40} placeholder="e.g. 1350" />
               </label>
             ) : (
-              <label>Location
+              <label className="field"><span>Location</span>
                 <input name="location" maxLength={120} placeholder="e.g. Uptown Waterloo, online" required />
               </label>
             )}
-            <label>Capacity
+            <label className="field"><span>Capacity <span className="optional">(optional)</span></span>
               <input type="number" name="capacity" min={2} max={500} placeholder="Unlimited" />
             </label>
-          </section>
+          </div>
 
-          <label className="panel host-description">Description
-            <textarea name="description" rows={5} maxLength={2000} placeholder="What's the plan? Who should come? What should they bring?" />
+          <label className="field"><span>Details <span className="optional">(optional)</span></span>
+            <textarea name="description" rows={4} maxLength={2000} placeholder="What's the plan? Who should come? What should they bring?" />
           </label>
 
-          {error && <p className="error">{error}</p>}
-          <button type="submit" className="btn-primary" disabled={busy}>{busy ? 'Creating…' : 'Create event'}</button>
-        </div>
+          {error && <p className="error" role="alert">{error}</p>}
+          <div className="form-actions">
+            <button type="submit" className="btn btn-primary btn-lg" disabled={busy}>{busy ? 'Creating…' : 'Create event'}</button>
+            <Link to="/events" className="btn btn-secondary btn-lg">Cancel</Link>
+          </div>
+        </form>
 
-        {building && (
-          <aside className="panel event-mini-map">
-            <h2>{building.code} – {building.name}</h2>
-            <CampusMap
-              markers={[{ id: building.code, lng: building.lng, lat: building.lat, status: 'upcoming', label: building.name }]}
-              selectedId={building.code}
-              center={[building.lng, building.lat]}
-              zoom={16.3}
-              pitch={45}
-            />
-          </aside>
-        )}
+        <aside className="host-aside" aria-label="Location preview">
+          <h2 className="section-label">Location</h2>
+          {building ? (
+            <div className="location-card">
+              <div className="location-map">
+                <CampusMap
+                  key={building.code}
+                  markers={[{ id: building.code, lng: building.lng, lat: building.lat, text: building.code, tone: 'student', label: building.name }]}
+                  center={[building.lng, building.lat]}
+                  zoom={16.3}
+                  pitch={45}
+                  interactive={false}
+                />
+              </div>
+              <div className="location-row">
+                <span>
+                  <strong>{building.name}</strong>
+                  <span className="muted">{building.code}</span>
+                </span>
+              </div>
+            </div>
+          ) : (
+            <p className="panel tinted muted">Events somewhere else are listed without a pin on the map.</p>
+          )}
+        </aside>
       </div>
-    </form>
+    </div>
   );
 }

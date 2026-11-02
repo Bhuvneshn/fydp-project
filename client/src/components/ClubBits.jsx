@@ -1,10 +1,11 @@
 import { useState } from 'react';
 
 const STATUS_LABEL = { active: 'Active', inactive: 'Inactive', unknown: 'Not checked' };
+const STATUS_CLASS = { active: 'tag positive', inactive: 'tag', unknown: 'tag outline' };
 
 export function ClubLogo({ club, large = false }) {
   const [failed, setFailed] = useState(false);
-  const className = large ? 'logo large' : 'logo';
+  const className = large ? 'logo club large' : 'logo club';
   if (club.logoUrl && !failed) {
     return <img className={className} src={club.logoUrl} alt="" loading="lazy" onError={() => setFailed(true)} />;
   }
@@ -13,7 +14,7 @@ export function ClubLogo({ club, large = false }) {
 
 export function StatusBadge({ instagram }) {
   return (
-    <span className={`badge ${instagram.status}`} title={instagram.reason}>
+    <span className={STATUS_CLASS[instagram.status]} title={instagram.reason}>
       {STATUS_LABEL[instagram.status]}
     </span>
   );

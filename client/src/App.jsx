@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
 import { useAuth } from './auth.jsx';
 import Layout from './components/Layout.jsx';
+import AuthLayout from './components/AuthLayout.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import Verify from './pages/Verify.jsx';
@@ -27,7 +28,7 @@ function Guard({ need, children }) {
   return needsVerification ? <Navigate to="/verify" replace /> : children;
 }
 
-const centered = (page) => <div className="centered">{page}</div>;
+const centered = (page) => <AuthLayout>{page}</AuthLayout>;
 
 export default function App() {
   return (

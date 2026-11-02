@@ -33,3 +33,60 @@ export function eventStatus(event, now = new Date()) {
 
 export const STATUS_RANK = { live: 0, today: 1, upcoming: 2 };
 export const STATUS_LABEL = { live: 'happening now', today: 'today', upcoming: 'upcoming' };
+
+// Pieces for the date block and card headings, all in Waterloo time.
+const partsFmt = new Intl.DateTimeFormat('en-CA', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' });
+function dateParts(d) {
+  const parts = Object.fromEntries(partsFmt.formatToParts(new Date(d)).map((p) => [p.type, p.value]));
+  return { weekday: parts.weekday, month: parts.month, day: Number(parts.day) };
+}
+
+export const monthAbbr = (d) => dateParts(d).month.slice(0, 3).toUpperCase(); // "NOV"
+export const dayOfMonth = (d) => dateParts(d).day; // 3
+export const weekdayShort = (d) => dateParts(d).weekday.slice(0, 3); // "Tue"
+
+// "Tuesday 3 November"
+export function formatLongDate(d) {
+  const { weekday, month, day } = dateParts(d);
+  return `${weekday} ${day} ${month}`;
+}
+
+// "6:00 PM"
+const clockFmt = new Intl.DateTimeFormat('en-US', { timeZone: TZ, hour: 'numeric', minute: '2-digit' });
+export const formatClock = (d) => clockFmt.format(new Date(d));
+
+// "6:00–9:00 PM", or "11:00 AM–1:00 PM" when the period changes
+export function formatTimeRange(event) {
+  if (event.allDay) return 'All day';
+  const start = formatClock(event.startAt);
+  if (!event.endAt || dateKey(event.startAt) !== dateKey(event.endAt)) return start;
+  const end = formatClock(event.endAt);
+  const [startTime, startPeriod] = start.split(' ');
+  return startPeriod === end.split(' ')[1] ? `${startTime}–${end}` : `${start}–${end}`;
+}
+
+// The bold line on an event card: "Tue · 6:00–9:00 PM", "Mon · All day", or a date span for multi-day events.
+export function formatCardWhen(event) {
+  const end = event.endAt ? new Date(new Date(event.endAt).getTime() - (event.allDay ? 60_000 : 0)) : null;
+  if (end && dateKey(event.startAt) !== dateKey(end)) {
+    return `${weekdayShort(event.startAt)} ${dayOfMonth(event.startAt)} – ${weekdayShort(end)} ${dayOfMonth(end)} ${dateParts(end).month.slice(0, 3)}`;
+  }
+  return `${weekdayShort(event.startAt)} · ${formatTimeRange(event)}`;
+}
+
+// Friendly start line for the Home spotlight: "Happening now · until 9:00 PM",
+// "Today at 6:00 PM · in 3 hours", "Tomorrow at 6:00 PM", or the card line for later dates.
+export function formatRelativeStart(event, now = new Date()) {
+  const start = new Date(event.startAt);
+  if (eventStatus(event, now) === 'live') {
+    return event.endAt && !event.allDay ? `Happening now · until ${formatClock(event.endAt)}` : 'Happening now';
+  }
+  const at = event.allDay ? 'all day' : `at ${formatClock(start)}`;
+  if (dateKey(start) === dateKey(now)) {
+    const mins = Math.round((start - now) / 60000);
+    const soon = mins < 60 ? `in ${mins} min` : `in ${Math.round(mins / 60)} hour${Math.round(mins / 60) === 1 ? '' : 's'}`;
+    return event.allDay ? 'Today, all day' : `Today ${at} · ${soon}`;
+  }
+  if (dateKey(start) === dateKey(now.getTime() + 864e5)) return `Tomorrow ${at}`;
+  return formatCardWhen(event);
+}

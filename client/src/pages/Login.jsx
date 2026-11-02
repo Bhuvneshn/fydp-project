@@ -11,20 +11,22 @@ export default function Login() {
   });
 
   return (
-    <main className="card">
-      <h1>Log in</h1>
-      <p className="subtitle">Use your @uwaterloo.ca account.</p>
-      <form onSubmit={onSubmit}>
-        <label>Email
+    <div className="auth-form">
+      <div className="auth-head">
+        <h1>Log in</h1>
+        <p className="lede">Use your @uwaterloo.ca account.</p>
+      </div>
+      <form className="form" onSubmit={onSubmit}>
+        <label className="field"><span>Email</span>
           <input name="email" type="email" placeholder="you@uwaterloo.ca" required autoComplete="email" />
         </label>
-        <label>Password
+        <label className="field"><span>Password</span>
           <input name="password" type="password" required autoComplete="current-password" />
         </label>
-        <p className="error">{error}</p>
-        <button type="submit" disabled={pending}>Log in</button>
+        {error && <p className="error" role="alert">{error}</p>}
+        <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={pending}>{pending ? 'Logging in…' : 'Log in'}</button>
       </form>
-      <p className="footer">No account? <Link to="/register">Create one</Link></p>
-    </main>
+      <p className="auth-alt">No account? <Link to="/register">Create one</Link></p>
+    </div>
   );
 }
