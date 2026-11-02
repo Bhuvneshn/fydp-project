@@ -16,6 +16,10 @@ server/            Express API
   auth.js          /api/auth routes
   email.js         One-time code scaffolding
   validation.js    @uwaterloo.ca check
+  clubs/
+    scrapeWusa.js  Imports clubs from clubs.wusa.ca
+    instagram.js   Checks each club's latest Instagram post
+    routes.js      /api/clubs
 ```
 
 ## Getting started
@@ -26,9 +30,43 @@ cp .env.example .env   # optional for local dev
 npm run dev            # API on :3000, React (Vite) on :5173
 ```
 
+Then import the clubs (takes ~15 seconds):
+
+```bash
+npm run scrape:clubs
+```
+
 Open http://localhost:5173. Vite proxies `/api` to the Express server.
 
 For production: `npm run build && npm start`, then Express serves the built React app and the API together on http://localhost:3000.
+
+## Clubs directory
+
+`/clubs` lists every club from the [WUSA clubs directory](https://clubs.wusa.ca/find-a-club), with search, filters (category, WUSA ratification this term, member count, year founded, which links a club has, meeting info) and sorting. Filters live in the URL, so filtered views can be shared. `/clubs/:id` shows a club's full profile.
+
+### Data source
+
+`npm run scrape:clubs` uses the public JSON API behind clubs.wusa.ca (`POST /api/v1/clubs_listing/{active,inactive}` + `GET /api/v1/clubs/:id/profile`) and upserts into the `clubs` table. Re-run it whenever you want fresh data; clubs removed from WUSA are deleted. Executive names are not stored, only the count.
+
+### Active / Inactive
+
+Clubs are classified by Instagram activity (computed at request time, so the window is always relative to today):
+
+| Tab          | Rule                                                                               |
+|--------------|------------------------------------------------------------------------------------|
+| Active       | Instagram linked on WUSA **and** latest post within the last 30 days              |
+| Inactive     | No Instagram linked, **or** latest post older than 30 days, **or** no posts       |
+| Not checked  | Instagram linked but we couldn't read it (not checked yet, personal/private account) |
+
+Instagram blocks anonymous scraping, so `npm run check:instagram` uses the official **Instagram Graph API Business Discovery** endpoint. Setup:
+
+1. Convert an Instagram account you control to a **Business or Creator** account and link it to a Facebook Page.
+2. Create a Meta app at developers.facebook.com and add the Instagram Graph API product.
+3. Generate a long-lived access token with `instagram_basic` and `pages_show_list` (plus `business_management` if needed).
+4. Put `IG_ACCESS_TOKEN` and `IG_BUSINESS_ACCOUNT_ID` (your Instagram account's user id) in `.env`.
+5. Run `npm run check:instagram`. It throttles to about 200 calls/hour (`IG_REQUEST_DELAY_MS`), skips accounts checked in the last 24h (`-- --force` to recheck all), and stops cleanly on rate limits so you can re-run it.
+
+Business Discovery can only see Business/Creator accounts; clubs using personal accounts show up under **Not checked**.
 
 ## How the email restriction works
 
@@ -45,6 +83,8 @@ It is enforced server-side on both `/api/auth/register` and `/api/auth/login`; t
 | GET    | `/api/auth/me`           | Current user                                 |
 | POST   | `/api/auth/verify`       | `{ code }` — confirm the emailed one-time code |
 | POST   | `/api/auth/resend-code`  | Issue a new one-time code                    |
+| GET    | `/api/clubs`             | All clubs with Instagram status (login required) |
+| GET    | `/api/clubs/:id`         | Full club profile (login required)           |
 
 ## Email verification (scaffolding)
 

@@ -8,7 +8,9 @@
     "postinstall": "npm --prefix client install",
     "dev:server": "node --env-file-if-exists=.env --watch server/server.js",
     "dev:client": "npm --prefix client run dev",
-    "build": "npm --prefix client run build"
+    "build": "npm --prefix client run build",
+    "scrape:clubs": "node --env-file-if-exists=.env server/clubs/scrapeWusa.js",
+    "check:instagram": "node --env-file-if-exists=.env server/clubs/instagram.js"
   },
   "keywords": [],
   "author": "",
