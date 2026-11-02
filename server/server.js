@@ -28,7 +28,11 @@ app.use(
 );
 
 app.use('/api/auth', authRouter);
-app.use(express.static(path.resolve('public'), { extensions: ['html'] }));
+
+// Serve the built React app (client/dist). In development Vite serves it instead.
+const clientDist = path.resolve(import.meta.dirname, '../client/dist');
+app.use(express.static(clientDist));
+app.get('/{*splat}', (req, res) => res.sendFile(path.join(clientDist, 'index.html')));
 
 app.listen(port, () => {
   console.log(`FYDP site running at http://localhost:${port}`);

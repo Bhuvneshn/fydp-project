@@ -1,10 +1,14 @@
 {
   "name": "fydp-project",
   "version": "1.0.0",
-  "main": "src/server.js",
+  "main": "server/server.js",
   "scripts": {
-    "start": "node --env-file-if-exists=.env src/server.js",
-    "dev": "node --env-file-if-exists=.env --watch src/server.js"
+    "start": "node --env-file-if-exists=.env server/server.js",
+    "dev": "concurrently -n server,client -c blue,magenta \"npm:dev:server\" \"npm:dev:client\"",
+    "postinstall": "npm --prefix client install",
+    "dev:server": "node --env-file-if-exists=.env --watch server/server.js",
+    "dev:client": "npm --prefix client run dev",
+    "build": "npm --prefix client run build"
   },
   "keywords": [],
   "author": "",
@@ -18,5 +22,8 @@
   "type": "module",
   "engines": {
     "node": ">=22.13"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6"
   }
 }

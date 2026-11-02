@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>FYDP Project</title>
-  <script>
-    fetch('/api/auth/me').then((r) => location.replace(r.ok ? '/dashboard' : '/login'));
-  </script>
 </head>
-<body></body>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
 </html>

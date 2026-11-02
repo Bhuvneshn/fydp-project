@@ -18,7 +18,7 @@ db.exec(`
     created_at     TEXT    NOT NULL DEFAULT (datetime('now'))
   );
 
-  -- One-time codes emailed during registration (see src/email.js).
+  -- One-time codes emailed during registration (see server/email.js).
   CREATE TABLE IF NOT EXISTS verification_codes (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
