@@ -103,7 +103,7 @@ export default function HostEvent() {
           <aside className="panel event-mini-map">
             <h2>{building.code} – {building.name}</h2>
             <CampusMap
-              markers={[{ id: building.code, lng: building.lng, lat: building.lat, status: 'upcoming', label: building.name }]}
+              markers={[{ id: building.code, lng: building.lng, lat: building.lat, text: building.code, label: building.name }]}
               selectedId={building.code}
               center={[building.lng, building.lat]}
               zoom={16.3}

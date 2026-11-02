@@ -75,7 +75,7 @@ export default function EventDetail() {
           <aside className="panel event-mini-map">
             <h2>{b.code} – {b.name}</h2>
             <CampusMap
-              markers={[{ id: b.code, lng: b.lng, lat: b.lat, status, label: b.name }]}
+              markers={[{ id: b.code, lng: b.lng, lat: b.lat, text: b.code, going: event.going, label: b.name }]}
               center={[b.lng, b.lat]}
               zoom={16.3}
               pitch={45}
