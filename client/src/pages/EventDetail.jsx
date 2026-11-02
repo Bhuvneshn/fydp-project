@@ -54,6 +54,8 @@ export default function EventDetail() {
           <div className="event-actions">
             {event.url && <a className="btn-primary" href={event.url} target="_blank" rel="noreferrer">View on {event.sourceLabel}</a>}
             {event.extra.virtualUrl && <a className="btn-secondary" href={event.extra.virtualUrl} target="_blank" rel="noreferrer">Join online</a>}
+            {event.extra.tickets && <a className="btn-secondary" href={event.extra.tickets} target="_blank" rel="noreferrer">Tickets</a>}
+            {event.extra.video && <a className="btn-secondary" href={event.extra.video} target="_blank" rel="noreferrer">Watch live</a>}
           </div>
         </div>
       </div>

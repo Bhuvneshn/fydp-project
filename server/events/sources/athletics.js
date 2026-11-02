@@ -45,7 +45,6 @@ function toEvent(g) {
   const [ly, lm, ld] = g.lastDay.split('-').map(Number);
   const end = allDay ? torontoToUtc(ly, lm, ld + 1) : new Date(start.getTime() + GAME_LENGTH_MS);
 
-  const home = g.location_indicator === 'H';
   const opponent = g.opponent?.title ?? null;
   const title = opponent ? `${g.sport.title} ${g.at_vs ?? 'vs'} ${opponent}` : g.sport.title;
   const link = (l) => (l?.url ? new URL(l.url, SITE).href : null);
@@ -63,9 +62,10 @@ function toEvent(g) {
     endAt: end.toISOString(),
     allDay,
     location: g.facility?.title?.trim() || g.location || null,
-    // Only home games are on campus; away facility names can collide with campus aliases.
+    // Home and neutral-site games (e.g. championships hosted at Warrior Field) may be on campus;
+    // away venues never are, even when their names collide with campus aliases.
     locationHints: [],
-    buildingCode: home ? undefined : null,
+    buildingCode: g.location_indicator === 'A' ? null : undefined,
     url: `${SITE}/calendar.aspx?game_id=${g.id}`,
     imageUrl: g.opponent?.image ? `${SITE}${g.opponent.image.path}/${g.opponent.image.filename}` : null,
     organizer: 'Waterloo Warriors',
