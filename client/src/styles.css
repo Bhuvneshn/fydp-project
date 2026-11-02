@@ -395,3 +395,23 @@ a.game-title:hover .game-opponent { text-decoration: underline; text-underline-o
   .schedule-toolbar .segmented { width: 100%; overflow-x: auto; }
   .responses li { flex-direction: column; align-items: flex-start; }
 }
+
+/* Host an event */
+.host-event { display: flex; flex-direction: column; gap: 16px; max-width: 1000px; margin: 0 auto; }
+.host-event .back { margin-bottom: 0; }
+.host-title { width: 100%; padding: 4px 0; font: inherit; font-size: 2rem; font-weight: 700; color: inherit; background: none; border: 0; border-bottom: 1px solid var(--border); outline: none; }
+.host-title:focus { border-bottom-color: var(--accent); }
+.host-layout { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
+.host-fields { display: flex; flex-direction: column; gap: 0; }
+.host-fields > .btn-primary { align-self: flex-start; border: 0; cursor: pointer; font: inherit; font-weight: 600; }
+.host-event label { display: block; font-size: 0.88rem; color: var(--muted); }
+.host-event label input, .host-event label select, .host-event label textarea {
+  display: block; width: 100%; margin-top: 6px; padding: 8px 10px; font: inherit; color: var(--text);
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+}
+.host-event .event-mini-map .campus-map { height: 260px; margin-bottom: 0; }
+@media (max-width: 800px) {
+  .host-layout { grid-template-columns: 1fr; }
+  .host-layout aside { order: -1; }
+  .host-title { font-size: 1.5rem; }
+}

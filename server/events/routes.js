@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { Router } from 'express';
 import { db } from '../db.js';
 import { requireAuth } from '../auth.js';
-import { MAX_UPCOMING_HOSTED, validateHostedEvent } from './hosted.js';
+import { HOSTED_CATEGORIES, MAX_UPCOMING_HOSTED, validateHostedEvent } from './hosted.js';
 
 export const eventsRouter = Router();
 eventsRouter.use(requireAuth);
@@ -81,9 +81,12 @@ eventsRouter.get('/', (req, res) => {
   res.json({ events: rows.map((r) => toEvent(r, { userId: req.session.userId })), lastImportedAt });
 });
 
-// Building picker for hosting an event.
-eventsRouter.get('/buildings', (req, res) => {
-  res.json({ buildings: db.prepare('SELECT code, name FROM buildings ORDER BY code').all() });
+// Choices for the host-an-event form.
+eventsRouter.get('/host-options', (req, res) => {
+  res.json({
+    categories: HOSTED_CATEGORIES,
+    buildings: db.prepare('SELECT code, name, lat, lng FROM buildings ORDER BY code').all(),
+  });
 });
 
 // Host a student-run event. The host is automatically going.

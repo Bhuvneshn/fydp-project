@@ -11,6 +11,7 @@ import ClubDetail from './pages/ClubDetail.jsx';
 // Map pages pull in MapLibre (~1 MB), so load them on demand.
 const Events = lazy(() => import('./pages/Events.jsx'));
 const EventDetail = lazy(() => import('./pages/EventDetail.jsx'));
+const HostEvent = lazy(() => import('./pages/HostEvent.jsx'));
 import Athletics from './pages/Athletics.jsx';
 import AthleticsSchedule from './pages/AthleticsSchedule.jsx';
 import TeamFinder from './pages/TeamFinder.jsx';
@@ -41,6 +42,7 @@ export default function App() {
         <Route path="/clubs" element={<Clubs />} />
         <Route path="/clubs/:id" element={<ClubDetail />} />
         <Route path="/events" element={<Suspense fallback={null}><Events /></Suspense>} />
+        <Route path="/events/new" element={<Suspense fallback={null}><HostEvent /></Suspense>} />
         <Route path="/events/:id" element={<Suspense fallback={null}><EventDetail /></Suspense>} />
         <Route path="/athletics" element={<Athletics />}>
           <Route index element={<AthleticsSchedule />} />
