@@ -160,19 +160,11 @@ function ShareButton({ title }) {
   );
 }
 
-// Initials avatars, coloured with the three tag tones so they stay inside the palette.
-const AVATAR_TONES = ['campus', 'athletics', 'student'];
-function avatarTone(handle) {
-  let h = 0;
-  for (const ch of handle) h = (h * 31 + ch.charCodeAt(0)) % 997;
-  return AVATAR_TONES[h % AVATAR_TONES.length];
-}
-
 export function Avatars({ handles, max = 8 }) {
   return (
     <span className="avatars">
       {handles.slice(0, max).map((h) => (
-        <span key={h} className={`avatar ${avatarTone(h)}`} title={h}>{h.slice(0, 1).toUpperCase()}</span>
+        <span key={h} className="avatar" title={h}>{h.slice(0, 1).toUpperCase()}</span>
       ))}
       {handles.length > max && <span className="avatar more">+{handles.length - max}</span>}
     </span>

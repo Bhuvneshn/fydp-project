@@ -161,7 +161,7 @@ function PostCard({ post, reload }) {
           <h3>{post.sport}</h3>
           {(post.division || post.skill) && (
             <div className="tag-row">
-              {post.division && <span className="tag athletics">{post.division}</span>}
+              {post.division && <span className="tag">{post.division}</span>}
               {post.skill && <span className="tag">{post.skill}</span>}
             </div>
           )}

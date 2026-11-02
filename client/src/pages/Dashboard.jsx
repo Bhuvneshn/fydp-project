@@ -2,13 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { request } from '../api.js';
 import EventCard, { DateBlock } from '../components/EventCard.jsx';
-import { PlusIcon } from '../components/Icons.jsx';
+import { PlusIcon, SearchIcon, UserIcon } from '../components/Icons.jsx';
 import { formatCardWhen, formatLongDate } from '../eventTime.js';
 
 const SHORTCUTS = [
-  { to: '/intramurals', title: 'Intramurals', text: 'Find a team, or players for yours', tone: 'athletics' },
-  { to: '/clubs', title: 'Clubs', text: 'Every club in the WUSA directory', tone: 'campus' },
-  { to: '/events/new', title: 'Host an event', text: 'A study session, a game night, anything', tone: 'student' },
+  { to: '/intramurals', title: 'Intramurals', text: 'Find a team, or players for yours', Icon: UserIcon },
+  { to: '/clubs', title: 'Clubs', text: 'Every club in the WUSA directory', Icon: SearchIcon },
+  { to: '/events/new', title: 'Host an event', text: 'A study session, a game night, anything', Icon: PlusIcon },
 ];
 
 export default function Dashboard() {
@@ -77,9 +77,7 @@ export default function Dashboard() {
           <nav className="shortcuts" aria-label="Shortcuts">
             {SHORTCUTS.map((s) => (
               <Link key={s.to} to={s.to} className="shortcut">
-                <span className={`shortcut-icon ${s.tone}`} aria-hidden="true">
-                  {s.to === '/events/new' ? <PlusIcon size={18} /> : s.title.slice(0, 1)}
-                </span>
+                <span className="shortcut-icon" aria-hidden="true"><s.Icon size={18} /></span>
                 <span>
                   <strong>{s.title}</strong>
                   <span className="muted">{s.text}</span>

@@ -18,9 +18,9 @@
   --going-ink: #1d4ed8;
   --going-line: #bfdbfe;
   /* One colour per event layer: campus, athletics, student-run. */
-  --campus-bg: #e0ecfb;
-  --campus-ink: #1e3a5f;
-  --campus-dot: #6b9bd8;
+  --campus-bg: #f5f5f4;
+  --campus-ink: #44403c;
+  --campus-dot: #a8a29e;
   --ath-bg: #e3f1e6;
   --ath-ink: #1f4d2c;
   --ath-dot: #6baf7d;
@@ -49,8 +49,9 @@
   --going-bg: #172340;
   --going-ink: #bfdbfe;
   --going-line: #1e3a8a;
-  --campus-bg: #1f2f47;
-  --campus-ink: #c7dbf7;
+  --campus-bg: #292524;
+  --campus-ink: #e7e5e4;
+  --campus-dot: #78716c;
   --ath-bg: #1e3426;
   --ath-ink: #c3e6cb;
   --stu-bg: #3d1f2b;
@@ -78,8 +79,9 @@
     --going-bg: #172340;
     --going-ink: #bfdbfe;
     --going-line: #1e3a8a;
-    --campus-bg: #1f2f47;
-    --campus-ink: #c7dbf7;
+    --campus-bg: #292524;
+    --campus-ink: #e7e5e4;
+    --campus-dot: #78716c;
     --ath-bg: #1e3426;
     --ath-ink: #c3e6cb;
     --stu-bg: #3d1f2b;
@@ -199,11 +201,16 @@ code { padding: 1px 6px; font-size: 0.88em; background: var(--surface); border-r
 .tag.campus { color: var(--campus-ink); background: var(--campus-bg); }
 .tag.athletics { color: var(--ath-ink); background: var(--ath-bg); }
 .tag.student { color: var(--stu-ink); background: var(--stu-bg); }
+/* Event-type tags carry the same dot as the map filters. */
+.tag.campus::before, .tag.athletics::before, .tag.student::before { content: ''; width: 6px; height: 6px; flex: none; border-radius: 50%; }
+.tag.campus::before { background: var(--campus-dot); }
+.tag.athletics::before { background: var(--ath-dot); }
+.tag.student::before { background: var(--stu-dot); }
 .tag.going { color: var(--going-ink); background: var(--going-bg); }
 .tag.going svg { color: var(--going); }
 .tag.now { color: var(--on-primary); background: var(--primary); }
-.tag.now::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--ath-dot); }
-.tag.positive { color: var(--ath-ink); background: var(--ath-bg); }
+.tag.now::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.tag.positive { color: var(--ink); background: transparent; box-shadow: inset 0 0 0 1.5px var(--ink); }
 .tag.cap { text-transform: capitalize; }
 /* Category names from WUSA can be long, so let those tags wrap. */
 .club-card .tag, .club-hero .tag, .tag-row .tag { max-width: 100%; box-sizing: border-box; white-space: normal; overflow-wrap: anywhere; }
@@ -233,7 +240,7 @@ code { padding: 1px 6px; font-size: 0.88em; background: var(--surface); border-r
 .nav-link.active { color: var(--ink); background: var(--surface); }
 .header-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 .account { position: relative; }
-.avatar-btn { width: 44px; height: 44px; padding: 0; font: inherit; font-size: 0.95rem; font-weight: 700; color: var(--stu-ink); background: var(--stu-bg); border: 0; border-radius: 50%; }
+.avatar-btn { width: 44px; height: 44px; padding: 0; font: inherit; font-size: 0.95rem; font-weight: 700; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 50%; }
 .account-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 40; width: 260px; display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--bg); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 12px 32px var(--shadow); }
 .account-email { font-size: 0.875rem; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
 @media (max-width: 760px) {
@@ -287,10 +294,7 @@ code { padding: 1px 6px; font-size: 0.88em; background: var(--surface); border-r
 .shortcut:hover strong { text-decoration: underline; text-underline-offset: 3px; }
 .shortcut > span:last-child { display: flex; flex-direction: column; gap: 2px; }
 .shortcut .muted { font-size: 0.85rem; color: var(--muted-2); }
-.shortcut-icon { width: 40px; height: 40px; flex: none; display: grid; place-items: center; font-weight: 700; border-radius: 12px; }
-.shortcut-icon.campus { color: var(--campus-ink); background: var(--campus-bg); }
-.shortcut-icon.athletics { color: var(--ath-ink); background: var(--ath-bg); }
-.shortcut-icon.student { color: var(--stu-ink); background: var(--stu-bg); }
+.shortcut-icon { width: 40px; height: 40px; flex: none; display: grid; place-items: center; color: var(--ink); background: var(--bg); border-radius: 12px; }
 
 /* Clubs directory */
 .clubs-tabs { display: flex; flex-direction: column; gap: 8px; margin: 20px 0; }
@@ -321,9 +325,6 @@ code { padding: 1px 6px; font-size: 0.88em; background: var(--surface); border-r
 .club-card .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: auto; padding-top: 2px; }
 .tag.outline { color: var(--muted-2); background: transparent; box-shadow: inset 0 0 0 1px var(--line-2); }
 .logo { flex: none; width: 44px; height: 44px; display: grid; place-items: center; font-size: 0.95rem; font-weight: 700; object-fit: cover; color: var(--ink-2); background: var(--surface); border-radius: 12px; }
-.logo.campus { color: var(--campus-ink); background: var(--campus-bg); }
-.logo.athletics { color: var(--ath-ink); background: var(--ath-bg); }
-.logo.student { color: var(--stu-ink); background: var(--stu-bg); }
 img.logo { background: var(--surface); }
 .logo.large { width: 88px; height: 88px; font-size: 1.6rem; border-radius: 20px; }
 
@@ -438,9 +439,6 @@ button.map-pin:hover { transform: scale(1.08); }
 .avatars { display: inline-flex; }
 .avatar { display: inline-grid; place-items: center; width: 38px; height: 38px; box-sizing: border-box; font-size: 0.8rem; font-weight: 700; color: var(--ink-2); background: var(--surface); border: 2px solid var(--bg); border-radius: 50%; }
 .avatar + .avatar { margin-left: -10px; }
-.avatar.campus { color: var(--campus-ink); background: var(--campus-bg); }
-.avatar.athletics { color: var(--ath-ink); background: var(--ath-bg); }
-.avatar.student { color: var(--stu-ink); background: var(--stu-bg); }
 
 /* Intramurals */
 .intramurals { display: flex; flex-direction: column; gap: 20px; }
