@@ -2,6 +2,7 @@
 // the central events calendar plus each faculty / department site.
 import ical from 'node-ical';
 import { decodeEntities, htmlToText } from '../text.js';
+import { torontoToUtc } from '../time.js';
 
 export const UW_FEEDS = [
   { feed: 'University', url: 'https://uwaterloo.ca/events/events/ical' },
@@ -69,11 +70,7 @@ export async function fetchUWaterlooEvents({ from, to }) {
 // node-ical builds all-day dates at midnight in the *server's* time zone; re-anchor that
 // calendar date to midnight in Toronto so it doesn't drift when the server runs elsewhere.
 function torontoMidnight(date) {
-  const utcGuess = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 5); // 00:00 EST
-  const torontoHour = Number(
-    new Intl.DateTimeFormat('en-US', { timeZone: 'America/Toronto', hour: 'numeric', hourCycle: 'h23' }).format(utcGuess)
-  );
-  return new Date(utcGuess - torontoHour * 3600e3); // shifts back an hour during EDT
+  return torontoToUtc(date.getFullYear(), date.getMonth() + 1, date.getDate());
 }
 
 // "E2 - Engineering 2- Room 2350 200 University Avenue West Waterloo ON N2L 3G1" -> "E2 - Engineering 2- Room 2350"
