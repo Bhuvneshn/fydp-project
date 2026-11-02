@@ -58,4 +58,14 @@ db.exec(`
     ig_checked_at          TEXT,
     ig_check_error         TEXT
   );
+
+  -- Campus buildings from UW's map API (see server/events/importBuildings.js).
+  CREATE TABLE IF NOT EXISTS buildings (
+    code       TEXT PRIMARY KEY,
+    name       TEXT NOT NULL,
+    alt_names  TEXT NOT NULL DEFAULT '[]',
+    lat        REAL NOT NULL,
+    lng        REAL NOT NULL,
+    updated_at TEXT NOT NULL
+  );
 `);

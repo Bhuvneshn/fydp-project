@@ -10,7 +10,8 @@
     "dev:client": "npm --prefix client run dev",
     "build": "npm --prefix client run build",
     "scrape:clubs": "node --env-file-if-exists=.env server/clubs/scrapeWusa.js",
-    "check:instagram": "node --env-file-if-exists=.env server/clubs/instagram.js"
+    "check:instagram": "node --env-file-if-exists=.env server/clubs/instagram.js",
+    "import:buildings": "node --env-file-if-exists=.env server/events/importBuildings.js"
   },
   "keywords": [],
   "author": "",
