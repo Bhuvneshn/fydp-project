@@ -7,8 +7,10 @@ import Verify from './pages/Verify.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Clubs from './pages/Clubs.jsx';
 import ClubDetail from './pages/ClubDetail.jsx';
+import Events from './pages/Events.jsx';
+import EventDetail from './pages/EventDetail.jsx';
 
-const HOME = '/clubs';
+const HOME = '/events';
 
 // Redirects based on login + verification state. `need` is what the route requires.
 function Guard({ need, children }) {
@@ -33,6 +35,8 @@ export default function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/clubs" element={<Clubs />} />
         <Route path="/clubs/:id" element={<ClubDetail />} />
+        <Route path="/events" element={<Events />} />
+        <Route path="/events/:id" element={<EventDetail />} />
       </Route>
       <Route path="*" element={<Navigate to={HOME} replace />} />
     </Routes>
