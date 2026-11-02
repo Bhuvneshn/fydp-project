@@ -1,14 +1,14 @@
 date,date_is_approx,person,hours,hours_is_estimate,category,activity,evidence
-,yes,Bhuvnesh,,yes,coding,Initial site with UWaterloo-only auth; move to React (Vite) and Express,7d85a31 65fdc60
-,yes,Bhuvnesh,,yes,coding,Clubs directory scraped from WUSA with filters and Instagram tabs,cb844ff
-,yes,Bhuvnesh,,yes,coding,"Campus buildings and event importers (WUSA, uwaterloo.ca), venue matching, events API",75b85e4 821cf92 3d76ef6 924ffed 738f8e6
-,yes,Bhuvnesh,,yes,coding,Events map page and event detail page,b5893f9 b36dba3
-,yes,Bhuvnesh,,yes,coding,Warriors varsity schedule import and athletics API and page,3a4b70c c764f17 eb218a0
-,yes,Bhuvnesh,,yes,coding,Intramural team finder API and page; Intramurals tab,701a90b ffa0f85 1af09c7
-,yes,Bhuvnesh,,yes,coding,"Student-run events and RSVPs: host, join, leave, cancel; map layer toggles",c11a5c1 cdf2431 643e5af 4755d75 d7003f4 be90ff0
-,yes,Bhuvnesh,,yes,coding,Persistent SQLite sessions and localStorage session handling,478d420 bf588b0 1712312
-,yes,Bhuvnesh,,yes,coding,README documentation for features and sessions,3f53d8f 903e102 aa544d9
-2026-11-02,no,Arjun,,yes,design,UI redesign: light and dark theme and section colours across all pages,PR #1 (19620f8..4c305b0)
+2026-11-02,yes,Bhuvnesh,0.24,yes,coding,Initial site with UWaterloo-only auth; move to React (Vite) and Express,7d85a31 65fdc60; hours from commit timestamps
+2026-11-02,yes,Bhuvnesh,0.40,yes,coding,Clubs directory scraped from WUSA with filters and Instagram tabs,cb844ff; hours from commit timestamps
+2026-11-02,yes,Bhuvnesh,0.38,yes,coding,"Campus buildings and event importers (WUSA, uwaterloo.ca), venue matching, events API",75b85e4 821cf92 3d76ef6 924ffed 738f8e6; hours from commit timestamps
+2026-11-02,yes,Bhuvnesh,0.10,yes,coding,Events map page and event detail page,b5893f9 b36dba3; hours from commit timestamps
+2026-11-02,yes,Bhuvnesh,0.05,yes,coding,Warriors varsity schedule import and athletics API and page,3a4b70c c764f17 eb218a0; hours from commit timestamps
+2026-11-02,yes,Bhuvnesh,0.07,yes,coding,Intramural team finder API and page; Intramurals tab,701a90b ffa0f85 1af09c7; hours from commit timestamps
+2026-11-02,yes,Bhuvnesh,0.06,yes,coding,"Student-run events and RSVPs: host, join, leave, cancel; map layer toggles",c11a5c1 cdf2431 643e5af 4755d75 d7003f4 be90ff0; hours from commit timestamps
+2026-11-02,yes,Bhuvnesh,0.07,yes,coding,Persistent SQLite sessions and localStorage session handling,478d420 bf588b0 1712312; hours from commit timestamps
+2026-11-02,yes,Bhuvnesh,0.01,yes,coding,README documentation for features and sessions,3f53d8f 903e102 aa544d9; hours from commit timestamps
+2026-11-02,no,Arjun,0.64,yes,design,UI redesign: light and dark theme and section colours across all pages,PR #1 (19620f8..4c305b0); hours from commit timestamps
 2026-11-02,no,Geoffrey,,yes,coding,In-app feedback button,PR #2
 2026-11-02,no,Koral,,yes,testing,Cloned and ran the app locally; found the empty SESSION_SECRET bug,local run; server/server.js:25
 2026-11-02,no,Koral,,yes,admin,Set up time log,time-log.csv
