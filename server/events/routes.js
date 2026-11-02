@@ -177,15 +177,14 @@ eventsRouter.delete('/:id/rsvp', (req, res) => {
   res.json({ event: toEvent(findEvent(row.id, userId), { userId }) });
 });
 
-// Ask to be paired with someone else going alone. Joins the event too if you haven't yet.
+// Ask to be paired with someone else going alone. You have to join the event first.
 eventsRouter.post('/:id/buddy', (req, res) => {
   const userId = req.session.userId;
   const row = findEvent(req.params.id, userId);
   if (!row) return res.status(404).json({ error: 'Event not found.' });
   if (row.host_user_id === userId) return res.status(400).json({ error: "You're hosting this one, so you won't be going alone." });
-  const err = joinError(row);
-  if (err) return res.status(err[0]).json({ error: err[1] });
-  addRsvp.run(row.id, userId);
+  if (new Date(row.end_at ?? row.start_at) < new Date()) return res.status(400).json({ error: 'This event has ended.' });
+  if (!row.going) return res.status(400).json({ error: 'Join the event first, then turn on pairing.' });
   optIn(row.id, userId);
   res.json({ pairing: buddyState(row.id, userId, row.start_at, row.all_day) });
 });

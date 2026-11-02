@@ -174,7 +174,8 @@ export function Avatars({ handles, max = 8 }) {
 
 const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
-// "Pair me with someone": for students going alone. Turning it on joins the event too.
+// "Pair me with someone": for students going alone. Shown to everyone, but only
+// switchable once you've joined the event.
 function BuddyCard({ event, onChange }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -185,13 +186,14 @@ function BuddyCard({ event, onChange }) {
 
   const meetAt = pairing.meetAt ? formatTime(pairing.meetAt) : null;
   const place = event.building?.name ?? event.location;
+  const locked = !event.going;
+  const lockedHint = 'Join the event first to get paired with someone.';
 
   async function toggle() {
     setBusy(true);
     setError('');
     try {
       await send(`/api/events/${encodeURIComponent(event.id)}/buddy`, pairing.optedIn ? 'DELETE' : 'POST');
-      // Reload: turning it on may also have joined the event.
       onChange((await request(`/api/events/${encodeURIComponent(event.id)}`)).event);
     } catch (err) {
       setError(err.message);
@@ -201,7 +203,7 @@ function BuddyCard({ event, onChange }) {
   }
 
   return (
-    <section className={`panel buddy-card${pairing.optedIn ? ' on' : ''}`} aria-labelledby="buddy-title">
+    <section className={`panel buddy-card${pairing.optedIn ? ' on' : ''}${locked ? ' locked' : ''}`} aria-labelledby="buddy-title">
       <div className="buddy-head">
         <span className="buddy-icon"><UsersIcon size={20} /></span>
         <span>
@@ -210,17 +212,21 @@ function BuddyCard({ event, onChange }) {
             Going alone? We'll match you with another student who's going alone, so you can walk in together.
           </p>
         </span>
-        <button
-          type="button"
-          role="switch"
-          className="switch"
-          aria-checked={pairing.optedIn}
-          aria-labelledby="buddy-title"
-          disabled={busy}
-          onClick={toggle}
-        >
-          <span className="switch-thumb" />
-        </button>
+        {/* Disabled buttons don't get hover events, so the tooltip sits on a wrapper. */}
+        <span className="switch-wrap" title={locked ? lockedHint : undefined}>
+          <button
+            type="button"
+            role="switch"
+            className="switch"
+            aria-checked={pairing.optedIn}
+            aria-labelledby="buddy-title"
+            aria-describedby={locked ? 'buddy-locked' : undefined}
+            disabled={busy || locked}
+            onClick={toggle}
+          >
+            <span className="switch-thumb" />
+          </button>
+        </span>
       </div>
 
       {pairing.buddy ? (
@@ -241,7 +247,7 @@ function BuddyCard({ event, onChange }) {
           <p className="small-text">{plural(pairing.waitingCount, 'student is', 'students are')} looking for a buddy.</p>
         )
       )}
-      {!event.going && !pairing.optedIn && <p className="muted small">Turning this on also joins the event.</p>}
+      {locked && <p id="buddy-locked" className="muted small">{lockedHint}</p>}
       {error && <p className="error" role="alert">{error}</p>}
     </section>
   );
