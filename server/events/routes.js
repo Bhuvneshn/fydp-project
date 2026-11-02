@@ -38,12 +38,17 @@ export function toEvent(row, { full = false } = {}) {
 }
 
 // Upcoming events (including ones in progress). ?days= limits how far ahead (default 60).
+// Away varsity games are left out here; they live on the athletics schedule.
 eventsRouter.get('/', (req, res) => {
   const days = Math.min(Number(req.query.days) || 60, 365);
   const now = new Date();
   const until = new Date(now.getTime() + days * 864e5).toISOString();
   const rows = db
-    .prepare(`${SELECT} WHERE COALESCE(e.end_at, e.start_at) >= ? AND e.start_at <= ? ORDER BY e.start_at`)
+    .prepare(
+      `${SELECT} WHERE COALESCE(e.end_at, e.start_at) >= ? AND e.start_at <= ?
+         AND NOT (e.source = 'athletics' AND json_extract(e.extra, '$.homeAway') != 'home')
+       ORDER BY e.start_at`
+    )
     .all(now.toISOString(), until);
   const lastImportedAt = db.prepare('SELECT MAX(imported_at) AS t FROM events').get().t;
   res.json({ events: rows.map((r) => toEvent(r)), lastImportedAt });
