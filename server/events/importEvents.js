@@ -6,6 +6,7 @@ import { resolveBuilding } from './locate.js';
 import { fetchWusaEvents } from './sources/wusa.js';
 import { fetchUWaterlooEvents } from './sources/uwaterloo.js';
 import { fetchAthleticsEvents } from './sources/athletics.js';
+import { fetchClubEvents } from './sources/clubs.js';
 
 const DAYS_AHEAD = 120;
 const KEEP_PAST_DAYS = 30;
@@ -14,7 +15,9 @@ const SOURCES = {
   wusa: async (range) => ({ events: await fetchWusaEvents(range), failures: [] }),
   uwaterloo: fetchUWaterlooEvents,
   athletics: async () => ({ events: await fetchAthleticsEvents(), failures: [] }),
+  club: fetchClubEvents,
 };
+// Student-run events (source 'student') are created in the app, not imported.
 
 const upsert = db.prepare(`
   INSERT INTO events (id, source, feed, title, description, start_at, end_at, all_day, location,
