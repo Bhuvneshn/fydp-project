@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { request } from '../api.js';
 import { ClubLogo, StatusBadge, formatDate } from '../components/ClubBits.jsx';
+import { BackIcon } from '../components/Icons.jsx';
 
 export default function ClubDetail() {
   const { id } = useParams();
@@ -20,7 +21,7 @@ export default function ClubDetail() {
 
   return (
     <>
-      <Link to="/clubs" className="back">← All clubs</Link>
+      <Link to="/clubs" className="back"><BackIcon />All clubs</Link>
 
       <div className="club-hero">
         <ClubLogo club={club} large />
@@ -28,7 +29,7 @@ export default function ClubDetail() {
           <h1>{club.name}{club.acronym && ` (${club.acronym})`}</h1>
           <div className="chips">
             <StatusBadge instagram={ig} />
-            {club.categories.map((c) => <span key={c} className="chip">{c}</span>)}
+            {club.categories.map((c) => <span key={c} className="tag">{c}</span>)}
           </div>
         </div>
       </div>
@@ -36,10 +37,10 @@ export default function ClubDetail() {
       <div className="detail-layout">
         <div>
           {/* WUSA's tagline is usually a truncated copy of the description. */}
-          {(club.description || club.tagline) && <Section title="About"><p>{club.description || club.tagline}</p></Section>}
-          {club.membershipAndMeeting && <Section title="Membership & meetings"><p>{club.membershipAndMeeting}</p></Section>}
-          {club.activities && <Section title="Activities"><p>{club.activities}</p></Section>}
-          {club.other && <Section title="Other"><p>{club.other}</p></Section>}
+          {(club.description || club.tagline) && <Section title="About"><p className="prose">{club.description || club.tagline}</p></Section>}
+          {club.membershipAndMeeting && <Section title="Membership & meetings"><p className="prose">{club.membershipAndMeeting}</p></Section>}
+          {club.activities && <Section title="Activities"><p className="prose">{club.activities}</p></Section>}
+          {club.other && <Section title="Other"><p className="prose">{club.other}</p></Section>}
           {club.gallery.length > 0 && (
             <Section title="Gallery">
               <div className="gallery">

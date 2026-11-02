@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { request } from '../api.js';
 import { ClubLogo, StatusBadge, formatDate } from '../components/ClubBits.jsx';
+import { FiltersIcon, SearchIcon } from '../components/Icons.jsx';
 import { MEMBER_OPTIONS, SORTS, TABS, applyFilters, filterOptions, readFilters } from '../clubFilters.js';
 
 export default function Clubs() {
@@ -55,41 +56,47 @@ export default function Clubs() {
 
   return (
     <>
-      <div className="clubs-header">
-        <h1>Clubs</h1>
-        <p>{clubs.length} clubs from the WUSA directory · synced {formatDate(data.lastScrapedAt)}</p>
+      <div className="page-head">
+        <div>
+          <h1>Clubs</h1>
+          <p>{clubs.length} clubs from the WUSA directory · synced {formatDate(data.lastScrapedAt)}</p>
+        </div>
       </div>
 
-      <div className="tabs" role="tablist">
-        {TABS.map((t) => (
-          <button
-            key={t.value}
-            role="tab"
-            aria-selected={filters.tab === t.value}
-            className={filters.tab === t.value ? 'selected' : ''}
-            onClick={() => setParam('tab', t.value === 'active' ? '' : t.value)}
-          >
-            {t.label}
-            <span className="count">{counts[t.value]}</span>
-          </button>
-        ))}
+      <div className="clubs-tabs">
+        <div className="chip-row" role="group" aria-label="Instagram activity">
+          {TABS.map((t) => (
+            <button
+              key={t.value}
+              type="button"
+              className="chip"
+              aria-pressed={filters.tab === t.value}
+              onClick={() => setParam('tab', t.value === 'active' ? '' : t.value)}
+            >
+              {t.label}
+              <span className="count">{counts[t.value]}</span>
+            </button>
+          ))}
+        </div>
+        {tabNote && <p className="tab-note">{tabNote}</p>}
       </div>
-      {tabNote && <p className="tab-note">{tabNote}</p>}
 
       <div className="clubs-layout">
-        <button type="button" className="filters-toggle" aria-expanded={showFilters} onClick={() => setShowFilters((v) => !v)}>
+        <button type="button" className="btn btn-secondary filters-toggle" aria-expanded={showFilters} onClick={() => setShowFilters((v) => !v)}>
+          <FiltersIcon size={16} />
           {showFilters ? 'Hide filters' : 'Filters'}{activeFilterCount > 0 && ` (${activeFilterCount})`}
         </button>
-        <aside className={showFilters ? 'filters open' : 'filters'}>
-          <div>
-            <h3>Search</h3>
+        <aside className={showFilters ? 'filters open' : 'filters'} aria-label="Filters">
+          <label className="search small-search">
+            <SearchIcon size={18} />
+            <span className="sr-only">Search clubs</span>
             <input
               type="search"
               placeholder="Name, acronym, tagline…"
               value={filters.q}
               onChange={(e) => setParam('q', e.target.value)}
             />
-          </div>
+          </label>
 
           <div>
             <h3>Category</h3>
@@ -103,7 +110,7 @@ export default function Clubs() {
 
           <div>
             <h3>WUSA status</h3>
-            <select value={filters.term} onChange={(e) => setParam('term', e.target.value)}>
+            <select className="select" aria-label="WUSA status" value={filters.term} onChange={(e) => setParam('term', e.target.value)}>
               <option value="">Any</option>
               <option value="yes">Ratified this term</option>
               <option value="no">Not ratified this term</option>
@@ -112,7 +119,7 @@ export default function Clubs() {
 
           <div>
             <h3>Size</h3>
-            <select value={filters.minMembers} onChange={(e) => setParam('members', e.target.value)}>
+            <select className="select" aria-label="Size" value={filters.minMembers} onChange={(e) => setParam('members', e.target.value)}>
               {MEMBER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           </div>
@@ -120,11 +127,11 @@ export default function Clubs() {
           <div>
             <h3>Founded</h3>
             <div className="row">
-              <select aria-label="Founded from" value={filters.from} onChange={(e) => setParam('from', e.target.value)}>
+              <select className="select" aria-label="Founded from" value={filters.from} onChange={(e) => setParam('from', e.target.value)}>
                 <option value="">From</option>
                 {options.years.map((y) => <option key={y} value={y}>{y}</option>)}
               </select>
-              <select aria-label="Founded to" value={filters.to} onChange={(e) => setParam('to', e.target.value)}>
+              <select className="select" aria-label="Founded to" value={filters.to} onChange={(e) => setParam('to', e.target.value)}>
                 <option value="">To</option>
                 {options.years.map((y) => <option key={y} value={y}>{y}</option>)}
               </select>
@@ -145,13 +152,13 @@ export default function Clubs() {
             </label>
           </div>
 
-          <button type="button" className="clear" onClick={clearFilters}>Clear filters</button>
+          <button type="button" className="btn btn-secondary btn-block" onClick={clearFilters}>Clear filters</button>
         </aside>
 
-        <section>
+        <section className="clubs-results">
           <div className="toolbar">
             <span className="results-count">{visible.length} {visible.length === 1 ? 'club' : 'clubs'}</span>
-            <select aria-label="Sort" value={filters.sort} onChange={(e) => setParam('sort', e.target.value === 'name' ? '' : e.target.value)}>
+            <select className="select" aria-label="Sort" value={filters.sort} onChange={(e) => setParam('sort', e.target.value === 'name' ? '' : e.target.value)}>
               {SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
           </div>
@@ -174,16 +181,20 @@ function ClubCard({ club }) {
     <Link to={`/clubs/${club.id}`} className="club-card">
       <div className="top">
         <ClubLogo club={club} />
-        <div>
-          <h2>{club.name}</h2>
-          <StatusBadge instagram={club.instagram} />
-        </div>
+        <h2>{club.name}</h2>
       </div>
       {club.tagline && <p className="tagline">{club.tagline}</p>}
       <div className="meta">
-        {club.categories.map((c) => <span key={c} className="chip">{c}</span>)}
-        {club.memberCount > 0 && <span>{club.memberCount} members</span>}
-        {club.instagram.lastPostAt && <span>· IG {formatDate(club.instagram.lastPostAt)}</span>}
+        <StatusBadge instagram={club.instagram} />
+        {club.categories.slice(0, 1).map((c) => <span key={c} className="tag">{c}</span>)}
+        {club.categories.length > 1 && <span className="tag">+{club.categories.length - 1}</span>}
+        <span className="card-meta">
+          {[
+            club.memberCount > 0 && `${club.memberCount} members`,
+            club.yearStarted && `since ${club.yearStarted}`,
+            club.instagram.lastPostAt && `IG ${formatDate(club.instagram.lastPostAt)}`,
+          ].filter(Boolean).join(' · ')}
+        </span>
       </div>
     </Link>
   );
