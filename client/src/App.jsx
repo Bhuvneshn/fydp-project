@@ -1,3 +1,4 @@
+import { Suspense, lazy } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
 import { useAuth } from './auth.jsx';
 import Layout from './components/Layout.jsx';
@@ -7,8 +8,9 @@ import Verify from './pages/Verify.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Clubs from './pages/Clubs.jsx';
 import ClubDetail from './pages/ClubDetail.jsx';
-import Events from './pages/Events.jsx';
-import EventDetail from './pages/EventDetail.jsx';
+// Map pages pull in MapLibre (~1 MB), so load them on demand.
+const Events = lazy(() => import('./pages/Events.jsx'));
+const EventDetail = lazy(() => import('./pages/EventDetail.jsx'));
 
 const HOME = '/events';
 
@@ -35,8 +37,8 @@ export default function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/clubs" element={<Clubs />} />
         <Route path="/clubs/:id" element={<ClubDetail />} />
-        <Route path="/events" element={<Events />} />
-        <Route path="/events/:id" element={<EventDetail />} />
+        <Route path="/events" element={<Suspense fallback={null}><Events /></Suspense>} />
+        <Route path="/events/:id" element={<Suspense fallback={null}><EventDetail /></Suspense>} />
       </Route>
       <Route path="*" element={<Navigate to={HOME} replace />} />
     </Routes>
