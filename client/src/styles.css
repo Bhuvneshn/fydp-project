@@ -498,6 +498,26 @@ button.map-pin:hover { transform: scale(1.08); }
 .guests { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
 .guests > span { display: flex; flex-direction: column; gap: 1px; }
 .guests .muted { font-size: 0.875rem; color: var(--muted-2); }
+/* Buddy pairing card in the event aside. On: outlined in ink, like the going button. */
+.buddy-card { display: flex; flex-direction: column; gap: 12px; }
+.buddy-card.on { border: 2px solid var(--going); padding: 19px; }
+.buddy-head { display: flex; align-items: flex-start; gap: 12px; }
+.buddy-head > span:nth-child(2) { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.buddy-head h2 { margin: 0; font-size: 1rem; font-weight: 700; }
+.buddy-icon { display: inline-grid; flex: none; place-items: center; width: 40px; height: 40px; color: var(--ink-2); background: var(--surface); border-radius: 12px; }
+.buddy-status { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; background: var(--surface); border-radius: 12px; }
+.buddy-status > p:first-child { font-weight: 600; overflow-wrap: anywhere; }
+.buddy-status > p:first-child svg { margin-right: 4px; vertical-align: -2px; }
+.switch {
+  position: relative; flex: none; width: 48px; height: 28px; margin-top: 6px; padding: 3px;
+  background: var(--line-2); border: 0; border-radius: 999px; transition: background-color 0.15s;
+}
+/* Widen the hit area to 44px without growing the track. */
+.switch::before { content: ''; position: absolute; inset: -8px -2px; }
+.switch-thumb { display: block; width: 22px; height: 22px; background: var(--bg); border-radius: 50%; box-shadow: 0 1px 2px var(--shadow); transition: transform 0.15s; }
+.switch[aria-checked="true"] { background: var(--primary); }
+.switch[aria-checked="true"] .switch-thumb { transform: translateX(20px); }
+.switch:disabled { opacity: 0.55; }
 .avatars { display: inline-flex; }
 .avatar { display: inline-grid; place-items: center; width: 38px; height: 38px; box-sizing: border-box; font-size: 0.8rem; font-weight: 700; color: var(--ink-2); background: var(--surface); border: 2px solid var(--bg); border-radius: 50%; }
 .avatar + .avatar { margin-left: -10px; }

@@ -3,6 +3,7 @@ import { Router } from 'express';
 import { db } from '../db.js';
 import { requireAuth } from '../auth.js';
 import { HOSTED_CATEGORIES, MAX_UPCOMING_HOSTED, validateHostedEvent } from './hosted.js';
+import { buddyState, optIn, optOut } from './buddies.js';
 
 export const eventsRouter = Router();
 eventsRouter.use(requireAuth);
@@ -132,7 +133,8 @@ eventsRouter.get('/:id', (req, res) => {
     )
     .all(row.id)
     .map((a) => handleOf(a.email));
-  res.json({ event: { ...toEvent(row, { full: true, userId }), attendees } });
+  const pairing = buddyState(row.id, userId, row.start_at, row.all_day);
+  res.json({ event: { ...toEvent(row, { full: true, userId }), attendees, pairing } });
 });
 
 // Hosts cancel their own events.
@@ -144,24 +146,54 @@ eventsRouter.delete('/:id', (req, res) => {
   res.json({ ok: true });
 });
 
+// Returns [status, error] if the user can't join this event, else null.
+function joinError(row) {
+  if (new Date(row.end_at ?? row.start_at) < new Date()) return [400, 'This event has ended.'];
+  if (!row.going && row.capacity != null && row.going_count >= row.capacity) return [409, 'This event is full.'];
+  return null;
+}
+
+const addRsvp = db.prepare('INSERT INTO event_rsvps (event_id, user_id) VALUES (?, ?) ON CONFLICT DO NOTHING');
+
 // Join an event. Full and finished events can't be joined.
 eventsRouter.post('/:id/rsvp', (req, res) => {
   const userId = req.session.userId;
   const row = findEvent(req.params.id, userId);
   if (!row) return res.status(404).json({ error: 'Event not found.' });
-  if (new Date(row.end_at ?? row.start_at) < new Date()) return res.status(400).json({ error: 'This event has ended.' });
-  if (!row.going && row.capacity != null && row.going_count >= row.capacity) {
-    return res.status(409).json({ error: 'This event is full.' });
-  }
-  db.prepare('INSERT INTO event_rsvps (event_id, user_id) VALUES (?, ?) ON CONFLICT DO NOTHING').run(row.id, userId);
+  const err = joinError(row);
+  if (err) return res.status(err[0]).json({ error: err[1] });
+  addRsvp.run(row.id, userId);
   res.json({ event: toEvent(findEvent(row.id, userId), { userId }) });
 });
 
+// Leaving also turns off buddy pairing, which frees your buddy for someone else.
 eventsRouter.delete('/:id/rsvp', (req, res) => {
   const userId = req.session.userId;
   const row = findEvent(req.params.id, userId);
   if (!row) return res.status(404).json({ error: 'Event not found.' });
   if (row.host_user_id === userId) return res.status(400).json({ error: "You're hosting this one. Cancel the event instead." });
+  optOut(row.id, userId);
   db.prepare('DELETE FROM event_rsvps WHERE event_id = ? AND user_id = ?').run(row.id, userId);
   res.json({ event: toEvent(findEvent(row.id, userId), { userId }) });
+});
+
+// Ask to be paired with someone else going alone. Joins the event too if you haven't yet.
+eventsRouter.post('/:id/buddy', (req, res) => {
+  const userId = req.session.userId;
+  const row = findEvent(req.params.id, userId);
+  if (!row) return res.status(404).json({ error: 'Event not found.' });
+  if (row.host_user_id === userId) return res.status(400).json({ error: "You're hosting this one, so you won't be going alone." });
+  const err = joinError(row);
+  if (err) return res.status(err[0]).json({ error: err[1] });
+  addRsvp.run(row.id, userId);
+  optIn(row.id, userId);
+  res.json({ pairing: buddyState(row.id, userId, row.start_at, row.all_day) });
+});
+
+eventsRouter.delete('/:id/buddy', (req, res) => {
+  const userId = req.session.userId;
+  const row = findEvent(req.params.id, userId);
+  if (!row) return res.status(404).json({ error: 'Event not found.' });
+  optOut(row.id, userId);
+  res.json({ pairing: buddyState(row.id, userId, row.start_at, row.all_day) });
 });

@@ -32,6 +32,9 @@ export const ShareIcon = (p) => (
 export const PinIcon = (p) => (
   <Icon strokeWidth={1.8} {...p}><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z" /><circle cx="12" cy="9.5" r="2.5" /></Icon>
 );
+export const UsersIcon = (p) => (
+  <Icon {...p}><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c.8-3.4 3.4-5 6.5-5s5.7 1.6 6.5 5" /><path d="M15.5 4.6a3.5 3.5 0 0 1 0 6.8M18 15.3c1.8.6 3 2.1 3.5 4.7" /></Icon>
+);
 export const UserIcon = (p) => <Icon {...p}><circle cx="12" cy="8" r="4" /><path d="M4 21c1-4 4.2-6 8-6s7 2 8 6" /></Icon>;
 export const MoonIcon = (p) => <Icon {...p}><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" /></Icon>;
 export const SunIcon = (p) => (

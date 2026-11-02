@@ -102,6 +102,17 @@ db.exec(`
     PRIMARY KEY (event_id, user_id)
   );
 
+  -- Buddy pairing for students going alone (see server/events/buddies.js).
+  -- One row per opted-in user; buddy_user_id is set on both rows once two are matched.
+  CREATE TABLE IF NOT EXISTS event_buddies (
+    event_id      TEXT    NOT NULL,
+    user_id       INTEGER NOT NULL,
+    buddy_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    created_at    TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+    PRIMARY KEY (event_id, user_id),
+    FOREIGN KEY (event_id, user_id) REFERENCES event_rsvps(event_id, user_id) ON DELETE CASCADE
+  );
+
   -- Intramural team finder (see server/athletics/teams.js).
   -- kind 'team': a team with players_have of team_size looking for more.
   -- kind 'player': a free agent looking for a team.
