@@ -13,7 +13,7 @@ export default function Layout() {
         <Link to="/" className="brand">FYDP<span className="brand-long"> Project</span></Link>
         <NavLink to="/dashboard" className={(s) => `${linkClass(s)} home`}>Home</NavLink>
         <NavLink to="/events" className={linkClass}>Events</NavLink>
-        <NavLink to="/athletics" className={linkClass}>Athletics</NavLink>
+        <NavLink to="/intramurals" className={linkClass}>Intramurals</NavLink>
         <NavLink to="/clubs" className={linkClass}>Clubs</NavLink>
         <span className="spacer" />
         <span className="who">{user.email}</span>

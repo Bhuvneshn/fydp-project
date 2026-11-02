@@ -17,7 +17,8 @@ function timeAgo(iso) {
   return `${Math.round(hours / 24)}d ago`;
 }
 
-export default function TeamFinder() {
+// Intramural team matching: teams post open spots, free agents post themselves, and people request to join.
+export default function Intramurals() {
   const [params, setParams] = useSearchParams();
   const tab = TABS.some((t) => t.value === params.get('tab')) ? params.get('tab') : 'team';
   const sport = params.get('sport') ?? '';
@@ -69,7 +70,11 @@ export default function TeamFinder() {
   const visible = posts.filter((p) => p.kind === tab && (!sport || p.sport === sport));
 
   return (
-    <>
+    <div className="intramurals">
+      <header className="section-head">
+        <h1>Intramurals</h1>
+        <p className="muted">Short a few players? Post your team. Want to play? Find one.</p>
+      </header>
       <div className="schedule-toolbar">
         <div className="segmented">
           {TABS.map((t) => (
@@ -114,7 +119,7 @@ export default function TeamFinder() {
           {visible.map((p) => <PostCard key={p.id} post={p} reload={load} />)}
         </div>
       )}
-    </>
+    </div>
   );
 }
 

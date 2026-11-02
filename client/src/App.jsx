@@ -12,9 +12,7 @@ import ClubDetail from './pages/ClubDetail.jsx';
 const Events = lazy(() => import('./pages/Events.jsx'));
 const EventDetail = lazy(() => import('./pages/EventDetail.jsx'));
 const HostEvent = lazy(() => import('./pages/HostEvent.jsx'));
-import Athletics from './pages/Athletics.jsx';
-import AthleticsSchedule from './pages/AthleticsSchedule.jsx';
-import TeamFinder from './pages/TeamFinder.jsx';
+import Intramurals from './pages/Intramurals.jsx';
 
 const HOME = '/events';
 
@@ -44,10 +42,9 @@ export default function App() {
         <Route path="/events" element={<Suspense fallback={null}><Events /></Suspense>} />
         <Route path="/events/new" element={<Suspense fallback={null}><HostEvent /></Suspense>} />
         <Route path="/events/:id" element={<Suspense fallback={null}><EventDetail /></Suspense>} />
-        <Route path="/athletics" element={<Athletics />}>
-          <Route index element={<AthleticsSchedule />} />
-          <Route path="teams" element={<TeamFinder />} />
-        </Route>
+        <Route path="/intramurals" element={<Intramurals />} />
+        {/* Varsity games now live on the events map's Athletics layer. */}
+        <Route path="/athletics/*" element={<Navigate to="/intramurals" replace />} />
       </Route>
       <Route path="*" element={<Navigate to={HOME} replace />} />
     </Routes>
