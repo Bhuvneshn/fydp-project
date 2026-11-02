@@ -22,6 +22,68 @@ export function ThemeToggle() {
   );
 }
 
+const FEEDBACK_EMAIL = 'geoffrey31415@gmail.com';
+
+function FeedbackButton() {
+  const { user } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState('');
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (e) => {
+      if (e.type === 'keydown' ? e.key === 'Escape' : !ref.current?.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', close);
+    document.addEventListener('keydown', close);
+    return () => {
+      document.removeEventListener('mousedown', close);
+      document.removeEventListener('keydown', close);
+    };
+  }, [open]);
+
+  function send(e) {
+    e.preventDefault();
+    const text = message.trim();
+    if (!text) return;
+    const body = encodeURIComponent(`${text}\n\n— ${user.email}`);
+    window.location.href = `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent('UWClubs feedback')}&body=${body}`;
+    setOpen(false);
+    setMessage('');
+  }
+
+  return (
+    <div className="account" ref={ref}>
+      <button
+        type="button"
+        className="btn btn-secondary btn-pill"
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        onClick={() => setOpen((v) => !v)}
+      >
+        Feedback
+      </button>
+      {open && (
+        <form className="account-menu feedback-menu" onSubmit={send}>
+          <p className="section-label">Send feedback</p>
+          <label className="field">
+            <span className="sr-only">Your feedback</span>
+            <textarea
+              required
+              rows={4}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="What's working, what's not…"
+            />
+          </label>
+          <button type="submit" className="btn btn-primary btn-block">Send</button>
+        </form>
+      )}
+    </div>
+  );
+}
+
 function AccountMenu() {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
@@ -75,6 +137,7 @@ export default function Layout() {
           </nav>
           <div className="header-actions">
             <ThemeToggle />
+            <FeedbackButton />
             <Link to="/events/new" className="btn btn-primary btn-pill">
               <PlusIcon size={16} />
               <span>Host event</span>
