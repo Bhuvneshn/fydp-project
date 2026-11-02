@@ -306,7 +306,7 @@ a { color: inherit; }
 .schedule-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 8px; }
 .schedule-toolbar select { padding: 7px 10px; font: inherit; color: inherit; background: var(--card); border: 1px solid var(--border); border-radius: 999px; }
 .segmented { display: inline-flex; padding: 3px; background: var(--chip); border-radius: 999px; }
-.segmented button { padding: 6px 14px; font: inherit; font-size: 0.9rem; color: var(--muted); background: none; border: 0; border-radius: 999px; cursor: pointer; }
+.segmented button { padding: 6px 14px; white-space: nowrap; font: inherit; font-size: 0.9rem; color: var(--muted); background: none; border: 0; border-radius: 999px; cursor: pointer; }
 .segmented button.on { color: var(--text); font-weight: 600; background: var(--card); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15); }
 
 .schedule-day h2 { position: sticky; top: 0; z-index: 1; margin: 0; padding: 18px 0 8px; font-size: 0.95rem; color: var(--muted); background: var(--bg); }
@@ -321,7 +321,8 @@ a { color: inherit; }
 a.game-title:hover .game-opponent { text-decoration: underline; text-underline-offset: 4px; }
 .game-sport { font-weight: 600; }
 .game-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 0.82rem; }
-.tag { padding: 1px 7px; font-size: 0.75rem; text-transform: capitalize; background: var(--chip); border-radius: 6px; }
+.tag { padding: 1px 7px; font-size: 0.75rem; background: var(--chip); border-radius: 6px; }
+.tag.cap { text-transform: capitalize; }
 .tag.home { color: var(--success); background: var(--success-bg); }
 .tag.cancelled { color: var(--error); }
 .game-side { display: flex; gap: 12px; font-size: 0.88rem; white-space: nowrap; }
@@ -331,4 +332,49 @@ a.game-title:hover .game-opponent { text-decoration: underline; text-underline-o
 @media (max-width: 600px) {
   .game { grid-template-columns: 56px 1fr auto; padding: 12px; }
   .game-logo { display: none; }
+}
+
+/* Intramural team finder */
+.schedule-toolbar .spacer { flex: 1; }
+.btn-primary { font: inherit; font-weight: 600; border: 0; cursor: pointer; }
+.btn-primary.small { padding: 6px 12px; font-size: 0.88rem; }
+.btn-primary:disabled { opacity: 0.6; cursor: default; }
+.link-btn { padding: 0; font: inherit; font-size: 0.88rem; color: var(--muted); background: none; border: 0; text-decoration: underline; cursor: pointer; }
+.small { font-size: 0.82rem; }
+.dot-count { display: inline-grid; place-items: center; min-width: 18px; height: 18px; margin-left: 6px; padding: 0 5px; font-size: 0.72rem; font-weight: 700; color: var(--accent-text); background: var(--accent); border-radius: 999px; }
+.chip-btn.danger { color: var(--error); }
+
+.team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-top: 12px; }
+.team-card { display: flex; flex-direction: column; gap: 10px; padding: 18px; background: var(--card); border: 1px solid var(--border); border-radius: 16px; transition: transform 0.15s, box-shadow 0.15s; }
+.team-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); }
+.team-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.team-card h3 { margin: 0; font-size: 1.35rem; letter-spacing: -0.01em; }
+.team-roster { display: flex; align-items: center; gap: 10px; }
+.roster { display: inline-flex; gap: 4px; }
+.roster span { width: 12px; height: 12px; border: 2px solid var(--accent); border-radius: 50%; }
+.roster span.filled { background: var(--accent); }
+.team-name { margin: 0; font-weight: 600; }
+.team-note { margin: 0; color: var(--muted); font-size: 0.92rem; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+.team-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border); }
+.team-compose { display: flex; flex-direction: column; gap: 8px; }
+.team-compose textarea, .team-form textarea, .team-form select, .team-form input {
+  display: block; width: 100%; margin-top: 6px; padding: 8px 10px; font: inherit; color: inherit;
+  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+}
+.row-end { display: flex; justify-content: flex-end; align-items: center; gap: 12px; }
+
+.team-form { display: flex; flex-direction: column; gap: 14px; margin: 12px 0 4px; }
+.team-form label { font-size: 0.88rem; color: var(--muted); }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+
+.my-activity h2 { margin: 24px 0 10px; font-size: 1.05rem; }
+.my-post { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+.my-post-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.my-post p { margin: 0; }
+.responses { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--border); }
+.responses li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px dashed var(--border); }
+.responses li p { margin: 4px 0 0; font-size: 0.9rem; }
+@media (max-width: 600px) {
+  .schedule-toolbar .segmented { width: 100%; overflow-x: auto; }
+  .responses li { flex-direction: column; align-items: flex-start; }
 }

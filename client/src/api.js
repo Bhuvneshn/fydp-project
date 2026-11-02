@@ -5,9 +5,13 @@ export function isUWaterlooEmail(email) {
 }
 
 // GET when body is undefined, otherwise POST JSON. Throws with the server's error message.
-export async function request(url, body) {
+export function request(url, body) {
+  return send(url, body === undefined ? 'GET' : 'POST', body);
+}
+
+export async function send(url, method, body) {
   const res = await fetch(url, {
-    method: body === undefined ? 'GET' : 'POST',
+    method,
     headers: { 'Content-Type': 'application/json' },
     body: body === undefined ? undefined : JSON.stringify(body),
   });

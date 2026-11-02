@@ -106,7 +106,7 @@ function GameRow({ game: g }) {
       <span className="game-main">
         {g.building ? <Link to={`/events/${encodeURIComponent(g.id)}`} className="game-title">{title}</Link> : <span className="game-title">{title}</span>}
         <span className="game-meta">
-          <span className={`tag ${x.homeAway}`}>{x.homeAway}</span>
+          <span className={`tag cap ${x.homeAway}`}>{x.homeAway}</span>
           {x.gameType && x.gameType !== 'Regular season' && <span className="tag">{x.gameType}</span>}
           {x.cancelled && <span className="tag cancelled">Cancelled</span>}
           <span className="muted">{g.location}{x.homeAway !== 'home' && x.city && g.location !== x.city ? `, ${x.city}` : ''}</span>

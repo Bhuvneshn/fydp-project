@@ -13,6 +13,7 @@ const Events = lazy(() => import('./pages/Events.jsx'));
 const EventDetail = lazy(() => import('./pages/EventDetail.jsx'));
 import Athletics from './pages/Athletics.jsx';
 import AthleticsSchedule from './pages/AthleticsSchedule.jsx';
+import TeamFinder from './pages/TeamFinder.jsx';
 
 const HOME = '/events';
 
@@ -43,6 +44,7 @@ export default function App() {
         <Route path="/events/:id" element={<Suspense fallback={null}><EventDetail /></Suspense>} />
         <Route path="/athletics" element={<Athletics />}>
           <Route index element={<AthleticsSchedule />} />
+          <Route path="teams" element={<TeamFinder />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to={HOME} replace />} />
