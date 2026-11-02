@@ -12,16 +12,15 @@
   --line-2: #d6d3d1;
   --primary: #1c1917;
   --on-primary: #ffffff;
-  /* Strong blue only means "you're going" (and hosting). No section colour is blue. */
-  --going: #3b82f6;
-  --going-bg: #eff6ff;
-  --going-ink: #1d4ed8;
-  --going-line: #bfdbfe;
+  /* "You're going" (and hosting) is near-black: the one state that outranks every section colour. */
+  --going: var(--ink);
+  --going-bg: var(--primary);
+  --going-ink: var(--on-primary);
   /* Section colours. Each has a pale tint (-bg), a deep text shade (-ink) and a mid-tone (-dot)
      for pins and the Home spotlight. Mid-tones always carry --on-dot text, so they work in both themes. */
-  --campus-bg: #fbefd9;  /* Campus events: amber */
-  --campus-ink: #6b4510;
-  --campus-dot: #e0a43a;
+  --campus-bg: #e6e9fb;  /* Campus events: periwinkle */
+  --campus-ink: #2f3a8f;
+  --campus-dot: #7c8ce6;
   --ath-bg: #e3f1e6;     /* Sports: Warriors games and intramurals: green */
   --ath-ink: #1f4d2c;
   --ath-dot: #6baf7d;
@@ -50,12 +49,8 @@
   --line-2: #57534e;
   --primary: #fafaf9;
   --on-primary: #1c1917;
-  --going: #60a5fa;
-  --going-bg: #172340;
-  --going-ink: #bfdbfe;
-  --going-line: #1e3a8a;
-  --campus-bg: #3a2c14;
-  --campus-ink: #f6dcae;
+  --campus-bg: #22284a;
+  --campus-ink: #d3d9fb;
   --ath-bg: #1e3426;
   --ath-ink: #c3e6cb;
   --stu-bg: #3d1f2b;
@@ -81,12 +76,8 @@
     --line-2: #57534e;
     --primary: #fafaf9;
     --on-primary: #1c1917;
-    --going: #60a5fa;
-    --going-bg: #172340;
-    --going-ink: #bfdbfe;
-    --going-line: #1e3a8a;
-    --campus-bg: #3a2c14;
-    --campus-ink: #f6dcae;
+    --campus-bg: #22284a;
+    --campus-ink: #d3d9fb;
     --ath-bg: #1e3426;
     --ath-ink: #c3e6cb;
     --stu-bg: #3d1f2b;
@@ -136,8 +127,8 @@ code { padding: 1px 6px; font-size: 0.88em; background: var(--surface); border-r
 .btn-primary:hover:not(:disabled) { opacity: 0.9; }
 .btn-secondary { color: var(--ink); background: var(--bg); border-color: var(--line); }
 .btn-secondary:hover:not(:disabled) { border-color: var(--line-2); }
-.btn-going { color: var(--going-ink); background: var(--going-bg); border: 1.5px solid var(--going); }
-.btn-going svg { color: var(--going); }
+/* Joined: an outlined twin of the Join button, with a check. */
+.btn-going { color: var(--ink); background: transparent; border: 2px solid var(--ink); }
 .btn-danger { color: var(--error); background: transparent; border-color: var(--line); }
 .btn-pill { border-radius: 999px; }
 .btn-lg { min-height: 52px; padding: 0 20px; font-size: 1rem; font-weight: 700; border-radius: 14px; }
@@ -216,7 +207,7 @@ code { padding: 1px 6px; font-size: 0.88em; background: var(--surface); border-r
 .tag.student::before { background: var(--stu-dot); }
 .tag.clubs::before { background: var(--club-dot); }
 .tag.going { color: var(--going-ink); background: var(--going-bg); }
-.tag.going svg { color: var(--going); }
+.tag.going svg { color: currentColor; }
 .tag.now { color: var(--on-primary); background: var(--primary); }
 .tag.now::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .tag.positive { color: var(--ink); background: transparent; box-shadow: inset 0 0 0 1.5px var(--ink); }
@@ -413,7 +404,7 @@ img.logo { background: var(--surface); }
 .date-block.going .date-block-month { color: var(--going-ink); }
 .event-card { display: flex; gap: 14px; padding: 16px; color: var(--ink); text-decoration: none; background: var(--bg); border: 1px solid var(--line); border-radius: 16px; transition: border-color 0.15s; }
 .event-card:hover { border-color: var(--line-2); }
-.event-card.is-going { border: 1.5px solid var(--going); }
+.event-card.is-going { border: 1.5px solid var(--ink); }
 .event-card.is-live { border: 1.5px solid var(--ink); }
 .event-card-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .event-card-when { font-size: 0.875rem; font-weight: 600; }
@@ -462,8 +453,7 @@ button.map-pin:hover { transform: scale(1.08); }
 .map-pin.tone-clubs { color: var(--on-dot); background: var(--club-dot); }
 .map-pin.selected { color: var(--on-primary); background: var(--primary); }
 .map-pin.selected { height: 42px; min-width: 42px; padding: 0 12px; font-size: 15px; }
-.map-pin.going { color: var(--going-ink); background: var(--bg); border-color: var(--going); }
-.map-pin.going svg { color: var(--going); }
+.map-pin.going { color: var(--ink); background: var(--bg); border-color: var(--ink); }
 .map-user { width: 14px; height: 14px; background: var(--ink); border: 3px solid var(--bg); border-radius: 50%; box-shadow: 0 0 0 6px var(--shadow); }
 .maplibregl-ctrl-group { background: var(--bg) !important; border: 1px solid var(--line); border-radius: 14px !important; box-shadow: 0 2px 8px var(--shadow) !important; overflow: hidden; }
 .maplibregl-ctrl-group button { width: 40px !important; height: 40px !important; }
