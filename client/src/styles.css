@@ -274,10 +274,34 @@ code { padding: 1px 6px; font-size: 0.88em; background: var(--surface); border-r
 .auth-pitch li svg { flex: none; margin-top: 2px; color: var(--ink); }
 .auth-pitch .muted { font-size: 0.9rem; color: var(--muted-2); }
 
-/* Older card, used by Home until it is rebuilt. */
-.card { max-width: 480px; margin: 40px auto; padding: 28px; background: var(--bg); border: 1px solid var(--line); border-radius: 20px; }
-.card h1 { margin: 0 0 4px; font-size: 1.5rem; }
-.subtitle { margin: 0 0 24px; color: var(--muted); }
+/* Home */
+.home { display: flex; flex-direction: column; gap: 28px; }
+.home-greeting { display: flex; flex-direction: column; gap: 4px; }
+.home-greeting .muted { font-size: 0.875rem; font-weight: 500; }
+.home-greeting h1 { font-size: clamp(28px, 4vw, 40px); font-weight: 700; letter-spacing: -0.02em; }
+.home-layout { display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; }
+.home-main { flex: 999 1 600px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.home-aside { flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.section-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.section-head h2 { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.01em; }
+.section-head .text-link { margin: -12px 0; }
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 14px; }
+.small-text { font-size: 0.875rem; line-height: 1.5; color: var(--muted-2); }
+.going-list { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.going-list a { display: flex; align-items: center; gap: 12px; color: var(--ink); text-decoration: none; }
+.going-list a > span:last-child { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.small-strong { font-size: 0.8rem; font-weight: 600; }
+.going-title { font-size: 0.95rem; font-weight: 600; overflow-wrap: anywhere; }
+.going-list a:hover .going-title { text-decoration: underline; text-underline-offset: 3px; }
+.shortcuts { display: flex; flex-direction: column; gap: 10px; }
+.shortcut { display: flex; align-items: center; gap: 14px; padding: 16px; color: var(--ink); text-decoration: none; background: var(--surface); border-radius: 16px; }
+.shortcut:hover strong { text-decoration: underline; text-underline-offset: 3px; }
+.shortcut > span:last-child { display: flex; flex-direction: column; gap: 2px; }
+.shortcut .muted { font-size: 0.85rem; color: var(--muted-2); }
+.shortcut-icon { width: 40px; height: 40px; flex: none; display: grid; place-items: center; font-weight: 700; border-radius: 12px; }
+.shortcut-icon.campus { color: var(--campus-ink); background: var(--campus-bg); }
+.shortcut-icon.athletics { color: var(--ath-ink); background: var(--ath-bg); }
+.shortcut-icon.student { color: var(--stu-ink); background: var(--stu-bg); }
 
 /* Clubs directory */
 .clubs-tabs { display: flex; flex-direction: column; gap: 8px; margin: 20px 0; }
