@@ -12,23 +12,26 @@ export default function Register() {
   });
 
   return (
-    <main className="card">
-      <h1>Create account</h1>
-      <p className="subtitle">Only @uwaterloo.ca emails can register.</p>
-      <form onSubmit={onSubmit}>
-        <label>Email
+    <div className="auth-form">
+      <div className="auth-head">
+        <h1>Create your account</h1>
+        <p className="lede">Only @uwaterloo.ca emails can register.</p>
+      </div>
+      <form className="form" onSubmit={onSubmit}>
+        <label className="field"><span>Email</span>
           <input name="email" type="email" placeholder="you@uwaterloo.ca" required autoComplete="email" />
         </label>
-        <label>Password
-          <input name="password" type="password" minLength={8} required autoComplete="new-password" />
+        <label className="field"><span>Password</span>
+          <input name="password" type="password" minLength={8} required autoComplete="new-password" aria-describedby="password-hint" />
+          <small id="password-hint" className="hint">At least 8 characters.</small>
         </label>
-        <label>Confirm password
+        <label className="field"><span>Confirm password</span>
           <input name="confirm" type="password" minLength={8} required autoComplete="new-password" />
         </label>
-        <p className="error">{error}</p>
-        <button type="submit" disabled={pending}>Create account</button>
+        {error && <p className="error" role="alert">{error}</p>}
+        <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={pending}>{pending ? 'Creating account…' : 'Create account'}</button>
       </form>
-      <p className="footer">Already have an account? <Link to="/login">Log in</Link></p>
-    </main>
+      <p className="auth-alt">Already have an account? <Link to="/login">Log in</Link></p>
+    </div>
   );
 }
