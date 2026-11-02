@@ -1,6 +1,6 @@
 # FYDP Project
 
-Campus life app for UWaterloo students: events map, athletics + intramural team finder, and clubs directory. Accounts are restricted to **@uwaterloo.ca** emails.
+Campus life app for UWaterloo students: an events map where students can also host and join events, intramural team matching, and a clubs directory. Accounts are restricted to **@uwaterloo.ca** emails.
 
 ## Stack
 
@@ -9,7 +9,7 @@ Campus life app for UWaterloo students: events map, athletics + intramural team 
 
 ```
 client/            React app
-  src/pages/       Login, Register, Verify, Events, Athletics, TeamFinder, Clubs, ...
+  src/pages/       Login, Register, Verify, Events, EventDetail, HostEvent, Intramurals, Clubs, ...
   src/components/  CampusMap (MapLibre), Layout, ...
   src/auth.jsx     Auth context (current user, login/register/verify/logout)
   src/App.jsx      Routes + redirect guards
@@ -24,11 +24,11 @@ server/            Express API
   events/
     importBuildings.js  Campus building codes + coordinates (UW map API)
     importEvents.js     Runs every event source below
-    sources/            wusa.js, uwaterloo.js, athletics.js
+    sources/            wusa.js, uwaterloo.js, athletics.js, clubs.js (scaffolding)
     locate.js           Matches venue text ("The Bomber", "MC 4060") to a building
-    routes.js           /api/events
+    hosted.js           Validation for student-run events
+    routes.js           /api/events (list, detail, host, join)
   athletics/
-    routes.js           /api/athletics/schedule
     teams.js            /api/teams (intramural team finder)
     intramurals.js      List of intramural sports (update each term)
 ```
@@ -83,7 +83,18 @@ Business Discovery can only see Business/Creator accounts; clubs using personal 
 
 ## Events map
 
-`/events` shows upcoming events on a 3D campus map, grouped by building (UI adapted from [Spots](https://github.com/notAkki/spots), MIT; see `THIRD_PARTY_NOTICES.md`). Markers glow green (happening now), amber (today) or indigo (upcoming). Filters: today / next 7 days, source, search, and "Near me" sorts buildings by distance.
+`/events` shows upcoming events on a 3D campus map, grouped by building (UI adapted from [Spots](https://github.com/notAkki/spots), MIT; see `THIRD_PARTY_NOTICES.md`). Markers glow green (happening now), amber (today) or indigo (upcoming). Filters: today / next 7 days, search, and "Near me" sorts buildings by distance.
+
+**Layers** toggle what's on the map:
+
+| Layer | What |
+|---|---|
+| Campus | WUSA and uwaterloo.ca events |
+| Athletics | Varsity home and on-campus neutral-site games (away games aren't shown) |
+| Student-run | Events students host in the app |
+| Clubs | Scaffolding only: `server/events/sources/clubs.js` returns nothing yet and lists options for sourcing club events |
+
+**Hosting and joining.** Anyone signed in can host an event (`/events/new`): name, category, date and time (Waterloo time; an end before the start runs past midnight), a campus building plus room, or "somewhere else" with free-text location (listed without a pin), optional capacity and description. Any event, imported or student-run, can be joined; the event page shows who's going and how many spots are left. Hosts are automatically going and can cancel their event. Limits: 10 upcoming hosted events per person, 12 hours long, 180 days out.
 
 The map uses MapLibre GL with OpenFreeMap's free dark style, so no Mapbox token is needed.
 
@@ -98,10 +109,9 @@ The map uses MapLibre GL with OpenFreeMap's free dark style, so no Mapbox token 
 
 Venues are matched to buildings by leading code ("MC 4060", "E2 - …"), aliases ("The Bomber" → SLC, "Carl Totzke Court" → PAC) and building names. Off-campus events stay in the list without a pin. Upcoming events a source stops listing are removed on the next import; past events are kept for 30 days.
 
-## Athletics
+## Intramurals
 
-- **Varsity schedule** (`/athletics`): upcoming games and results, filterable by sport and home/away. Home and on-campus neutral-site games also appear on the events map.
-- **Intramural team finder** (`/athletics/teams`): captains post "we have 4 of 6, need 2 more"; free agents post that they're looking for a team. Others tap **I'm in** (or **Invite to my team**) with an optional note; the poster accepts or declines under **My activity**. Accepting a player fills a spot, and the post is marked filled when the roster is full. The poster sees requesters' emails; requesters see the poster's email once accepted.
+`/intramurals` is team matching: captains post "we have 4 of 6, need 2 more"; free agents post that they're looking for a team. Others tap **I'm in** (or **Invite to my team**) with an optional note; the poster accepts or declines under **My activity**. Accepting a player fills a spot, and the post is marked filled when the roster is full. The poster sees requesters' emails; requesters see the poster's email once accepted.
 
 Intramural registration itself stays on warrior.uwaterloo.ca (its robots.txt disallows scraping), so the sport list in `server/athletics/intramurals.js` is maintained by hand.
 
@@ -123,8 +133,11 @@ It is enforced server-side on both `/api/auth/register` and `/api/auth/login`; t
 | GET    | `/api/clubs`             | All clubs with Instagram status (login required) |
 | GET    | `/api/clubs/:id`         | Full club profile (login required)           |
 | GET    | `/api/events`            | Upcoming on-campus events with building coordinates (`?days=60`) |
-| GET    | `/api/events/:id`        | Event detail                                 |
-| GET    | `/api/athletics/schedule`| Varsity games: recent results + upcoming     |
+| GET    | `/api/events/:id`        | Event detail with guest list                 |
+| GET    | `/api/events/host-options` | Categories and buildings for hosting       |
+| POST   | `/api/events`            | Host a student-run event                     |
+| DELETE | `/api/events/:id`        | Host: cancel event                           |
+| POST/DELETE | `/api/events/:id/rsvp` | Join / leave an event                     |
 | GET    | `/api/teams`             | Open team-finder posts (`?kind=team\|player&sport=`) |
 | GET    | `/api/teams/mine`        | My posts (with requests) and my requests     |
 | POST   | `/api/teams`             | Create a post                                |
