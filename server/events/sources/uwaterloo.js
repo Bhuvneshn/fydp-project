@@ -32,12 +32,14 @@ export async function fetchUWaterlooEvents({ from, to }) {
     }
     for (const e of Object.values(data)) {
       if (e.type !== 'VEVENT' || !e.start) continue;
-      const end = e.end ?? e.start;
-      if (end.getTime() < fromMs || e.start.getTime() > toMs) continue;
+      const allDay = e.datetype === 'date';
+      const start = allDay ? torontoMidnight(e.start) : e.start;
+      const end = e.end ? (allDay ? torontoMidnight(e.end) : e.end) : null;
+      if ((end ?? start).getTime() < fromMs || start.getTime() > toMs) continue;
 
       // Events promoted from a faculty site also appear on the central calendar.
       const title = String(e.summary ?? '').replace(/\s+/g, ' ').trim();
-      const dedupeKey = `${title.toLowerCase()}|${e.start.toISOString()}`;
+      const dedupeKey = `${title.toLowerCase()}|${start.toISOString()}`;
       if (!title || seen.has(dedupeKey)) continue;
       seen.add(dedupeKey);
 
@@ -47,9 +49,9 @@ export async function fetchUWaterlooEvents({ from, to }) {
         feed,
         title,
         description: htmlToText(e.description),
-        startAt: e.start.toISOString(),
-        endAt: e.end ? e.end.toISOString() : null,
-        allDay: e.datetype === 'date',
+        startAt: start.toISOString(),
+        endAt: end ? end.toISOString() : null,
+        allDay,
         location: cleanLocation(e.location ?? '') || null,
         locationHints: [],
         url: typeof e.url === 'object' ? e.url.val : e.url ?? null,
@@ -62,6 +64,16 @@ export async function fetchUWaterlooEvents({ from, to }) {
     }
   }
   return { events, failures };
+}
+
+// node-ical builds all-day dates at midnight in the *server's* time zone; re-anchor that
+// calendar date to midnight in Toronto so it doesn't drift when the server runs elsewhere.
+function torontoMidnight(date) {
+  const utcGuess = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 5); // 00:00 EST
+  const torontoHour = Number(
+    new Intl.DateTimeFormat('en-US', { timeZone: 'America/Toronto', hour: 'numeric', hourCycle: 'h23' }).format(utcGuess)
+  );
+  return new Date(utcGuess - torontoHour * 3600e3); // shifts back an hour during EDT
 }
 
 // "E2 - Engineering 2- Room 2350 200 University Avenue West Waterloo ON N2L 3G1" -> "E2 - Engineering 2- Room 2350"
