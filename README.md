@@ -115,6 +115,10 @@ Venues are matched to buildings by leading code ("MC 4060", "E2 - …"), aliases
 
 Intramural registration itself stays on warrior.uwaterloo.ca (its robots.txt disallows scraping), so the sport list in `server/athletics/intramurals.js` is maintained by hand.
 
+## Sessions
+
+Logins last 30 days from your last visit. Sessions are stored in the `sessions` table in SQLite (`server/sessionStore.js`), so restarting the server, including `node --watch` reloads in development, doesn't log anyone out. The browser also keeps the signed-in user in localStorage so pages render immediately; the server's cookie is still the source of truth, and the app returns to the login page only when the API says the session is gone, not when the server is briefly unreachable. Set `SESSION_SECRET` in production; changing it logs everyone out.
+
 ## How the email restriction works
 
 `server/validation.js` → `isUWaterlooEmail()` only accepts addresses whose domain is exactly `uwaterloo.ca`.
