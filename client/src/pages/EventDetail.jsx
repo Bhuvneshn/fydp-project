@@ -209,7 +209,7 @@ function BuddyCard({ event, onChange }) {
         <span>
           <h2 id="buddy-title">Pair me with someone</h2>
           <p className="small-text">
-            Going alone? We'll match you with another student who's going alone, so you can walk in together.
+            Going alone? We'll pair you with another student who's also going alone, so you know someone there.
           </p>
         </span>
         {/* Disabled buttons don't get hover events, so the tooltip sits on a wrapper. */}
@@ -240,7 +240,7 @@ function BuddyCard({ event, onChange }) {
       ) : pairing.optedIn ? (
         <div className="buddy-status" role="status">
           <p>Looking for a buddy</p>
-          <p className="small-text">We'll match you as soon as someone else going alone turns this on.</p>
+          <p className="small-text">We'll pair you as soon as someone else going alone turns this on.</p>
         </div>
       ) : (
         pairing.waitingCount > 0 && (
