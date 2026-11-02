@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { request } from '../api.js';
 import EventCard, { DateBlock, LAYER_LABEL } from '../components/EventCard.jsx';
 import { CheckIcon } from '../components/Icons.jsx';
-import { eventStatus, formatCardWhen, formatLongDate, formatRelativeStart } from '../eventTime.js';
+import { dayOfMonth, eventStatus, formatCardWhen, formatLongDate, formatRelativeStart, monthAbbr, weekdayShort } from '../eventTime.js';
 
 const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 // Hide every layer except one, so a tile opens the map filtered to its type.
@@ -37,26 +37,30 @@ function Spotlight({ event, label, now }) {
   const link = `/events/${encodeURIComponent(event.id)}`;
   return (
     <section className={`spotlight ${event.layer}`} aria-labelledby="spotlight-title">
-      <div className="spotlight-top">
+      <div className="spotlight-body">
         <span className="spotlight-label">
           {event.going && <CheckIcon size={14} />}
-          {label}
+          {label} · {LAYER_LABEL[event.layer]}
         </span>
-        <span className="spotlight-type">{LAYER_LABEL[event.layer]}</span>
+        <h2 id="spotlight-title"><Link to={link}>{event.title}</Link></h2>
+        <p className="spotlight-when">{formatRelativeStart(event, now)}</p>
+        <p className="spotlight-place">
+          {[event.location ?? 'Location TBA', event.host ? `Hosted by ${event.host}` : event.organizer].filter(Boolean).join(' · ')}
+        </p>
+        <div className="spotlight-actions">
+          <Link to={link} className="btn btn-lg btn-primary">{event.going ? 'View details' : 'See event'}</Link>
+          {b && (
+            <a className="btn btn-lg btn-secondary" href={`https://www.google.com/maps/dir/?api=1&destination=${b.lat},${b.lng}`} target="_blank" rel="noreferrer">
+              Directions
+            </a>
+          )}
+        </div>
       </div>
-      <h2 id="spotlight-title"><Link to={link}>{event.title}</Link></h2>
-      <p className="spotlight-when">{formatRelativeStart(event, now)}</p>
-      <p className="spotlight-place">
-        {[event.location ?? 'Location TBA', event.host ? `Hosted by ${event.host}` : event.organizer].filter(Boolean).join(' · ')}
-      </p>
-      <div className="spotlight-actions">
-        <Link to={link} className="btn btn-lg btn-inverse">{event.going ? 'View details' : 'See event'}</Link>
-        {b && (
-          <a className="btn btn-lg btn-inverse-outline" href={`https://www.google.com/maps/dir/?api=1&destination=${b.lat},${b.lng}`} target="_blank" rel="noreferrer">
-            Directions
-          </a>
-        )}
-      </div>
+      <span className="spotlight-date" aria-hidden="true">
+        <span>{monthAbbr(event.startAt)}</span>
+        <strong>{dayOfMonth(event.startAt)}</strong>
+        <span>{weekdayShort(event.startAt)}</span>
+      </span>
     </section>
   );
 }
