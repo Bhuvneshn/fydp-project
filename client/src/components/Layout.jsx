@@ -4,11 +4,12 @@ import { useAuth } from '../auth.jsx';
 import { useTheme } from '../theme.jsx';
 import { MoonIcon, PlusIcon, SunIcon } from './Icons.jsx';
 
+// Sections with their own colour show it on the active link.
 const LINKS = [
   { to: '/dashboard', label: 'Home' },
   { to: '/events', label: 'Events' },
-  { to: '/intramurals', label: 'Intramurals' },
-  { to: '/clubs', label: 'Clubs' },
+  { to: '/intramurals', label: 'Intramurals', tone: 'athletics' },
+  { to: '/clubs', label: 'Clubs', tone: 'clubs' },
 ];
 
 export function ThemeToggle() {
@@ -69,7 +70,7 @@ export default function Layout() {
           <Link to="/" className="wordmark">UWClubs</Link>
           <nav aria-label="Main" className="site-nav">
             {LINKS.map((l) => (
-              <NavLink key={l.to} to={l.to} className="nav-link">{l.label}</NavLink>
+              <NavLink key={l.to} to={l.to} className={`nav-link${l.tone ? ` ${l.tone}` : ''}`}>{l.label}</NavLink>
             ))}
           </nav>
           <div className="header-actions">

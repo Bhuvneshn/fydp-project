@@ -5,7 +5,7 @@ const STATUS_CLASS = { active: 'tag positive', inactive: 'tag', unknown: 'tag ou
 
 export function ClubLogo({ club, large = false }) {
   const [failed, setFailed] = useState(false);
-  const className = large ? 'logo large' : 'logo';
+  const className = large ? 'logo club large' : 'logo club';
   if (club.logoUrl && !failed) {
     return <img className={className} src={club.logoUrl} alt="" loading="lazy" onError={() => setFailed(true)} />;
   }

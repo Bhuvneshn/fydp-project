@@ -41,7 +41,8 @@ function add3dBuildings(map, color) {
 }
 
 /**
- * markers: [{ id, lng, lat, text, label, going }] — text is drawn on the pin (an event count or building code)
+ * markers: [{ id, lng, lat, text, label, going, tone }] — text is drawn on the pin (an event count or building code),
+ *   tone is the event layer that colours it
  * selectedId: marker id to highlight and fly to
  * onSelect(id): called when a pin is clicked
  * interactive: false for small preview maps
@@ -120,7 +121,7 @@ export default function CampusMap({ markers, selectedId, onSelect, userPos, inte
       }
       const pin = marker.getElement().firstChild;
       const selected = m.id === selectedId;
-      pin.className = `map-pin${selected ? ' selected' : ''}${m.going && !selected ? ' going' : ''}`;
+      pin.className = `map-pin${m.tone ? ` tone-${m.tone}` : ''}${selected ? ' selected' : ''}${m.going && !selected ? ' going' : ''}`;
       pin.innerHTML = `${m.going && !selected ? CHECK_SVG : ''}<span>${m.text}</span>`;
       pin.title = m.label;
       if (interactive) {

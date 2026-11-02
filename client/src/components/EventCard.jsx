@@ -4,9 +4,10 @@ import { CheckIcon } from './Icons.jsx';
 
 export const LAYER_LABEL = { campus: 'Campus', athletics: 'Athletics', student: 'Student-run', clubs: 'Clubs' };
 
-export function DateBlock({ date, size = 'md', going = false }) {
+// tone is the event layer (campus, athletics, student, clubs); going overrides it with blue.
+export function DateBlock({ date, size = 'md', going = false, tone }) {
   return (
-    <span className={`date-block ${size}${going ? ' going' : ''}`} aria-hidden="true">
+    <span className={`date-block ${size} ${going ? 'going' : tone ?? ''}`} aria-hidden="true">
       <span className="date-block-month">{monthAbbr(date)}</span>
       <span className="date-block-day">{dayOfMonth(date)}</span>
     </span>
@@ -47,7 +48,7 @@ export default function EventCard({ event, now, distance, moreDates = 0 }) {
       to={`/events/${encodeURIComponent(event.id)}`}
       className={`event-card${event.going ? ' is-going' : live ? ' is-live' : ''}`}
     >
-      <DateBlock date={event.startAt} going={event.going} />
+      <DateBlock date={event.startAt} going={event.going} tone={event.layer} />
       <span className="event-card-body">
         <span className="event-card-when">{formatCardWhen(event)}</span>
         <span className="event-card-title">{event.title}</span>

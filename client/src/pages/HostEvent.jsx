@@ -51,6 +51,7 @@ export default function HostEvent() {
       <Link to="/events" className="back"><BackIcon />Events</Link>
       <div className="page-head">
         <div>
+          <span className="tag student">Student-run</span>
           <h1>Host an event</h1>
           <p>Small, low-key and open to other students. It shows up on the map once you create it.</p>
         </div>
@@ -122,8 +123,7 @@ export default function HostEvent() {
               <div className="location-map">
                 <CampusMap
                   key={building.code}
-                  markers={[{ id: building.code, lng: building.lng, lat: building.lat, text: building.code, label: building.name }]}
-                  selectedId={building.code}
+                  markers={[{ id: building.code, lng: building.lng, lat: building.lat, text: building.code, tone: 'student', label: building.name }]}
                   center={[building.lng, building.lat]}
                   zoom={16.3}
                   pitch={45}

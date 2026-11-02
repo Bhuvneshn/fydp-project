@@ -12,21 +12,26 @@
   --line-2: #d6d3d1;
   --primary: #1c1917;
   --on-primary: #ffffff;
-  /* Blue only means "you're going" (and hosting). */
+  /* Strong blue only means "you're going" (and hosting). No section colour is blue. */
   --going: #3b82f6;
   --going-bg: #eff6ff;
   --going-ink: #1d4ed8;
   --going-line: #bfdbfe;
-  /* One colour per event layer: campus, athletics, student-run. */
-  --campus-bg: #f5f5f4;
-  --campus-ink: #44403c;
-  --campus-dot: #a8a29e;
-  --ath-bg: #e3f1e6;
+  /* Section colours. Each has a pale tint (-bg), a deep text shade (-ink) and a mid-tone (-dot)
+     for pins and the Home spotlight. Mid-tones always carry --on-dot text, so they work in both themes. */
+  --campus-bg: #fbefd9;  /* Campus events: amber */
+  --campus-ink: #6b4510;
+  --campus-dot: #e0a43a;
+  --ath-bg: #e3f1e6;     /* Sports: Warriors games and intramurals: green */
   --ath-ink: #1f4d2c;
   --ath-dot: #6baf7d;
-  --stu-bg: #fbe4ec;
+  --stu-bg: #fbe4ec;     /* Student-run events: pink */
   --stu-ink: #7a2346;
   --stu-dot: #d88aa6;
+  --club-bg: #ece7fb;    /* Clubs: lavender */
+  --club-ink: #45348a;
+  --club-dot: #9c88de;
+  --on-dot: #1c1917;
   --error: #b42318;
   --error-bg: #fef3f2;
   --shadow: rgba(28, 25, 23, 0.16);
@@ -49,13 +54,14 @@
   --going-bg: #172340;
   --going-ink: #bfdbfe;
   --going-line: #1e3a8a;
-  --campus-bg: #292524;
-  --campus-ink: #e7e5e4;
-  --campus-dot: #78716c;
+  --campus-bg: #3a2c14;
+  --campus-ink: #f6dcae;
   --ath-bg: #1e3426;
   --ath-ink: #c3e6cb;
   --stu-bg: #3d1f2b;
   --stu-ink: #f6c6d6;
+  --club-bg: #2b2445;
+  --club-ink: #d9d0fb;
   --error: #fda29b;
   --error-bg: #3b1a17;
   --shadow: rgba(0, 0, 0, 0.45);
@@ -79,13 +85,14 @@
     --going-bg: #172340;
     --going-ink: #bfdbfe;
     --going-line: #1e3a8a;
-    --campus-bg: #292524;
-    --campus-ink: #e7e5e4;
-    --campus-dot: #78716c;
+    --campus-bg: #3a2c14;
+    --campus-ink: #f6dcae;
     --ath-bg: #1e3426;
     --ath-ink: #c3e6cb;
     --stu-bg: #3d1f2b;
     --stu-ink: #f6c6d6;
+    --club-bg: #2b2445;
+    --club-ink: #d9d0fb;
     --error: #fda29b;
     --error-bg: #3b1a17;
     --shadow: rgba(0, 0, 0, 0.45);
@@ -192,7 +199,7 @@ code { padding: 1px 6px; font-size: 0.88em; background: var(--surface); border-r
 .chip.outline[aria-pressed="true"] .dot.campus, .legend .dot.campus { background: var(--campus-dot); }
 .chip.outline[aria-pressed="true"] .dot.athletics, .legend .dot.athletics { background: var(--ath-dot); }
 .chip.outline[aria-pressed="true"] .dot.student, .legend .dot.student { background: var(--stu-dot); }
-.chip.outline[aria-pressed="true"] .dot.clubs { background: var(--muted); }
+.chip.outline[aria-pressed="true"] .dot.clubs { background: var(--club-dot); }
 .segmented { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 4px; background: var(--surface); border-radius: 999px; }
 .segmented button {
   display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 16px; font: inherit; font-size: 0.875rem; font-weight: 600;
@@ -207,10 +214,12 @@ code { padding: 1px 6px; font-size: 0.88em; background: var(--surface); border-r
 .tag.athletics { color: var(--ath-ink); background: var(--ath-bg); }
 .tag.student { color: var(--stu-ink); background: var(--stu-bg); }
 /* Event-type tags carry the same dot as the map filters. */
-.tag.campus::before, .tag.athletics::before, .tag.student::before { content: ''; width: 6px; height: 6px; flex: none; border-radius: 50%; }
+.tag.clubs { color: var(--club-ink); background: var(--club-bg); }
+.tag.campus::before, .tag.athletics::before, .tag.student::before, .tag.clubs::before { content: ''; width: 6px; height: 6px; flex: none; border-radius: 50%; }
 .tag.campus::before { background: var(--campus-dot); }
 .tag.athletics::before { background: var(--ath-dot); }
 .tag.student::before { background: var(--stu-dot); }
+.tag.clubs::before { background: var(--club-dot); }
 .tag.going { color: var(--going-ink); background: var(--going-bg); }
 .tag.going svg { color: var(--going); }
 .tag.now { color: var(--on-primary); background: var(--primary); }
@@ -229,6 +238,7 @@ code { padding: 1px 6px; font-size: 0.88em; background: var(--surface); border-r
 /* Page headings */
 .page-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 16px; }
 .page-head h1 { font-size: clamp(28px, 4vw, 40px); font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; }
+.page-head .tag { margin-bottom: 10px; }
 .page-head p { margin-top: 4px; font-size: 0.95rem; font-weight: 500; color: var(--muted-2); line-height: 1.5; }
 .back { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: 0.875rem; font-weight: 600; text-decoration: none; color: var(--ink); }
 
@@ -243,6 +253,8 @@ code { padding: 1px 6px; font-size: 0.88em; background: var(--surface); border-r
 .nav-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; font-size: 0.95rem; font-weight: 600; text-decoration: none; white-space: nowrap; color: var(--muted-2); border-radius: 999px; }
 .nav-link:hover { color: var(--ink); }
 .nav-link.active { color: var(--ink); background: var(--surface); }
+.nav-link.active.athletics { color: var(--ath-ink); background: var(--ath-bg); }
+.nav-link.active.clubs { color: var(--club-ink); background: var(--club-bg); }
 .header-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 .account { position: relative; }
 .avatar-btn { width: 44px; height: 44px; padding: 0; font: inherit; font-size: 0.95rem; font-weight: 700; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 50%; }
@@ -280,16 +292,42 @@ code { padding: 1px 6px; font-size: 0.88em; background: var(--surface); border-r
 .home-greeting { display: flex; flex-direction: column; gap: 4px; }
 .home-greeting .muted { font-size: 0.875rem; font-weight: 500; }
 .home-greeting h1 { font-size: clamp(24px, 3vw, 30px); font-weight: 700; letter-spacing: -0.02em; }
-/* The one high-contrast block on Home: what to look at first. */
-.spotlight { display: flex; flex-direction: column; gap: 10px; padding: clamp(24px, 4vw, 40px); color: var(--on-primary); background: var(--primary); border-radius: 24px; }
-.spotlight-label { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.75; }
+/* The one big block on Home: what to look at first, in its event type's colour. */
+.spotlight { display: flex; flex-direction: column; gap: 10px; padding: clamp(24px, 4vw, 40px); color: var(--on-dot); background: var(--ink); border-radius: 24px; }
+.spotlight.campus { background: var(--campus-dot); }
+.spotlight.athletics { background: var(--ath-dot); }
+.spotlight.student { background: var(--stu-dot); }
+.spotlight.clubs { background: var(--club-dot); }
+.spotlight-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.spotlight-label { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.spotlight-type { padding: 4px 12px; font-size: 0.8rem; font-weight: 700; background: rgb(255 255 255 / 0.45); border-radius: 999px; }
 .spotlight h2 { max-width: 760px; font-size: clamp(28px, 4.5vw, 44px); line-height: 1.1; font-weight: 700; letter-spacing: -0.025em; overflow-wrap: anywhere; }
 .spotlight h2 a { color: inherit; text-decoration: none; }
 .spotlight h2 a:hover { text-decoration: underline; text-underline-offset: 6px; text-decoration-thickness: 2px; }
 .spotlight-when { font-size: 1.15rem; font-weight: 600; }
-.spotlight-place { font-size: 0.95rem; opacity: 0.75; overflow-wrap: anywhere; }
+.spotlight-place { font-size: 0.95rem; font-weight: 500; overflow-wrap: anywhere; }
 .spotlight-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-.spotlight :focus-visible { outline-color: var(--on-primary); }
+.spotlight .btn-inverse { color: #ffffff; background: var(--on-dot); }
+.spotlight .btn-inverse-outline { color: var(--on-dot); border-color: rgb(28 25 23 / 0.45); }
+.spotlight .btn-inverse-outline:hover { border-color: var(--on-dot); }
+.spotlight :focus-visible { outline-color: var(--on-dot); }
+
+/* Section tiles: one per type, each in its colour */
+.section-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 12px; }
+.section-tile { display: flex; flex-direction: column; gap: 4px; padding: 18px; text-decoration: none; border-radius: 18px; transition: transform 0.15s; }
+.section-tile:hover { transform: translateY(-2px); }
+.section-tile.campus { color: var(--campus-ink); background: var(--campus-bg); }
+.section-tile.athletics { color: var(--ath-ink); background: var(--ath-bg); }
+.section-tile.student { color: var(--stu-ink); background: var(--stu-bg); }
+.section-tile.clubs { color: var(--club-ink); background: var(--club-bg); }
+.section-tile-title { display: inline-flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.section-tile-title::before { content: ''; width: 8px; height: 8px; border-radius: 50%; }
+.section-tile.campus .section-tile-title::before { background: var(--campus-dot); }
+.section-tile.athletics .section-tile-title::before { background: var(--ath-dot); }
+.section-tile.student .section-tile-title::before { background: var(--stu-dot); }
+.section-tile.clubs .section-tile-title::before { background: var(--club-dot); }
+.section-tile-stat { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.01em; }
+.section-tile-text { font-size: 0.85rem; font-weight: 500; opacity: 0.85; }
 .home-layout { display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; }
 .home-main { flex: 999 1 600px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
 .home-aside { flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
@@ -304,12 +342,6 @@ code { padding: 1px 6px; font-size: 0.88em; background: var(--surface); border-r
 .small-strong { font-size: 0.8rem; font-weight: 600; }
 .going-title { font-size: 0.95rem; font-weight: 600; overflow-wrap: anywhere; }
 .going-list a:hover .going-title { text-decoration: underline; text-underline-offset: 3px; }
-.shortcuts { display: flex; flex-direction: column; gap: 10px; }
-.shortcut { display: flex; align-items: center; gap: 14px; padding: 16px; color: var(--ink); text-decoration: none; background: var(--surface); border-radius: 16px; }
-.shortcut:hover strong { text-decoration: underline; text-underline-offset: 3px; }
-.shortcut > span:last-child { display: flex; flex-direction: column; gap: 2px; }
-.shortcut .muted { font-size: 0.85rem; color: var(--muted-2); }
-.shortcut-icon { width: 40px; height: 40px; flex: none; display: grid; place-items: center; color: var(--ink); background: var(--bg); border-radius: 12px; }
 
 /* Clubs directory */
 .clubs-tabs { display: flex; flex-direction: column; gap: 8px; margin: 20px 0; }
@@ -340,6 +372,7 @@ code { padding: 1px 6px; font-size: 0.88em; background: var(--surface); border-r
 .club-card .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: auto; padding-top: 2px; }
 .tag.outline { color: var(--muted-2); background: transparent; box-shadow: inset 0 0 0 1px var(--line-2); }
 .logo { flex: none; width: 44px; height: 44px; display: grid; place-items: center; font-size: 0.95rem; font-weight: 700; object-fit: cover; color: var(--ink-2); background: var(--surface); border-radius: 12px; }
+.logo.club { color: var(--club-ink); background: var(--club-bg); }
 img.logo { background: var(--surface); }
 .logo.large { width: 88px; height: 88px; font-size: 1.6rem; border-radius: 20px; }
 
@@ -365,6 +398,12 @@ img.logo { background: var(--surface); }
 .date-block-month { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; color: var(--muted-2); }
 .date-block-day { font-size: 1.5rem; font-weight: 700; line-height: 1.05; }
 .date-block.sm .date-block-day { font-size: 1.2rem; }
+.date-block.campus { color: var(--campus-ink); background: var(--campus-bg); }
+.date-block.athletics { color: var(--ath-ink); background: var(--ath-bg); }
+.date-block.student { color: var(--stu-ink); background: var(--stu-bg); }
+.date-block.clubs { color: var(--club-ink); background: var(--club-bg); }
+.date-block.campus .date-block-month, .date-block.athletics .date-block-month,
+.date-block.student .date-block-month, .date-block.clubs .date-block-month { color: inherit; opacity: 0.85; }
 .date-block.going { color: var(--going-ink); background: var(--going-bg); }
 .date-block.going .date-block-month { color: var(--going-ink); }
 .event-card { display: flex; gap: 14px; padding: 16px; color: var(--ink); text-decoration: none; background: var(--bg); border: 1px solid var(--line); border-radius: 16px; transition: border-color 0.15s; }
@@ -412,6 +451,11 @@ img.logo { background: var(--surface); }
   box-shadow: 0 3px 10px var(--shadow); transition: transform 0.15s;
 }
 button.map-pin:hover { transform: scale(1.08); }
+.map-pin.tone-campus { color: var(--on-dot); background: var(--campus-dot); }
+.map-pin.tone-athletics { color: var(--on-dot); background: var(--ath-dot); }
+.map-pin.tone-student { color: var(--on-dot); background: var(--stu-dot); }
+.map-pin.tone-clubs { color: var(--on-dot); background: var(--club-dot); }
+.map-pin.selected { color: var(--on-primary); background: var(--primary); }
 .map-pin.selected { height: 42px; min-width: 42px; padding: 0 12px; font-size: 15px; }
 .map-pin.going { color: var(--going-ink); background: var(--bg); border-color: var(--going); }
 .map-pin.going svg { color: var(--going); }
@@ -474,8 +518,8 @@ button.map-pin:hover { transform: scale(1.08); }
 .team-roster { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; }
 .team-roster .strong { font-size: 0.875rem; font-weight: 600; }
 .roster { display: inline-flex; flex-wrap: wrap; gap: 4px; }
-.roster span { width: 12px; height: 12px; box-sizing: border-box; border: 2px solid var(--line-2); border-radius: 50%; }
-.roster span.filled { background: var(--ink); border-color: var(--ink); }
+.roster span { width: 14px; height: 14px; box-sizing: border-box; border: 2px solid var(--line-2); border-radius: 50%; }
+.roster span.filled { background: var(--ath-dot); border-color: var(--ath-dot); }
 .team-name { font-weight: 600; }
 .team-note { font-size: 0.9rem; line-height: 1.5; color: var(--muted-2); white-space: pre-wrap; overflow-wrap: anywhere; }
 .team-card-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line); }

@@ -49,7 +49,14 @@ function collapseRepeats(events) {
   return [...byTitle.values()];
 }
 
-// Pins: one per building, with its event count. A blue ring marks buildings where you're going.
+// Pins: one per building, with its event count, coloured by the building's most common layer.
+// A blue ring marks buildings where you're going.
+function mainLayer(events) {
+  const counts = {};
+  for (const e of events) counts[e.layer] = (counts[e.layer] ?? 0) + 1;
+  return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+}
+
 function buildingGroups(events) {
   const groups = new Map();
   for (const event of events) {
@@ -121,12 +128,13 @@ export default function Events() {
         lng: g.building.lng,
         lat: g.building.lat,
         text: String(g.events.length),
+        tone: mainLayer(g.events),
         going: g.events.some((e) => e.going),
         label: `${g.key}, ${g.events.length} event${g.events.length === 1 ? '' : 's'}${g.events.some((e) => e.going) ? ", you're going to one" : ''}`,
       })),
     // groups is rebuilt every render; key on its contents instead.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [JSON.stringify(groups.map((g) => [g.key, g.events.length, g.events.some((e) => e.going)]))]
+    [JSON.stringify(groups.map((g) => [g.key, g.events.length, mainLayer(g.events), g.events.some((e) => e.going)]))]
   );
 
   const listed = selectedGroup ? selectedGroup.events : visible;

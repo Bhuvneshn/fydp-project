@@ -1,15 +1,25 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { request } from '../api.js';
-import EventCard, { DateBlock } from '../components/EventCard.jsx';
-import { CheckIcon, PlusIcon, SearchIcon, UserIcon } from '../components/Icons.jsx';
+import EventCard, { DateBlock, LAYER_LABEL } from '../components/EventCard.jsx';
+import { CheckIcon } from '../components/Icons.jsx';
 import { eventStatus, formatCardWhen, formatLongDate, formatRelativeStart } from '../eventTime.js';
 
-const SHORTCUTS = [
-  { to: '/intramurals', title: 'Intramurals', text: 'Find a team, or players for yours', Icon: UserIcon },
-  { to: '/clubs', title: 'Clubs', text: 'Every club in the WUSA directory', Icon: SearchIcon },
-  { to: '/events/new', title: 'Host an event', text: 'A study session, a game night, anything', Icon: PlusIcon },
-];
+const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+// Hide every layer except one, so a tile opens the map filtered to its type.
+const onlyLayer = (layer) => `/events?${['campus', 'athletics', 'student', 'clubs'].filter((l) => l !== layer).map((l) => `hide=${l}`).join('&')}`;
+
+// One tile per section, in that section's colour.
+function sectionTiles(events, clubCount, teamPosts) {
+  const count = (layer) => events.filter((e) => e.layer === layer).length;
+  const student = count('student');
+  return [
+    { tone: 'campus', title: 'Campus', stat: plural(count('campus'), 'event'), text: 'Talks, socials and WUSA events', to: onlyLayer('campus') },
+    { tone: 'athletics', title: 'Sports', stat: plural(count('athletics'), 'Warriors game'), text: teamPosts ? `Plus ${plural(teamPosts, 'intramural team')} looking for players` : 'Home games on and near campus', to: onlyLayer('athletics') },
+    { tone: 'student', title: 'Student-run', stat: student ? plural(student, 'event') : 'Host the first one', text: 'Study sessions, game nights, anything', to: student ? onlyLayer('student') : '/events/new' },
+    { tone: 'clubs', title: 'Clubs', stat: clubCount == null ? 'WUSA directory' : plural(clubCount, 'club'), text: 'Every club in the WUSA directory', to: '/clubs' },
+  ];
+}
 
 // The one thing worth looking at first: your next event, else what's on right now, else what's next today.
 function pickSpotlight(events, going, now) {
@@ -26,11 +36,14 @@ function Spotlight({ event, label, now }) {
   const b = event.building;
   const link = `/events/${encodeURIComponent(event.id)}`;
   return (
-    <section className="spotlight" aria-labelledby="spotlight-title">
-      <span className="spotlight-label">
-        {event.going && <CheckIcon size={14} />}
-        {label}
-      </span>
+    <section className={`spotlight ${event.layer}`} aria-labelledby="spotlight-title">
+      <div className="spotlight-top">
+        <span className="spotlight-label">
+          {event.going && <CheckIcon size={14} />}
+          {label}
+        </span>
+        <span className="spotlight-type">{LAYER_LABEL[event.layer]}</span>
+      </div>
       <h2 id="spotlight-title"><Link to={link}>{event.title}</Link></h2>
       <p className="spotlight-when">{formatRelativeStart(event, now)}</p>
       <p className="spotlight-place">
@@ -51,9 +64,14 @@ function Spotlight({ event, label, now }) {
 export default function Dashboard() {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
+  const [clubCount, setClubCount] = useState(null);
+  const [teamPosts, setTeamPosts] = useState(0);
 
   useEffect(() => {
     request('/api/events').then(setData).catch((err) => setError(err.message));
+    // Counts for the section tiles; the page works without them.
+    request('/api/clubs').then((d) => setClubCount(d.clubs.length)).catch(() => {});
+    request('/api/teams').then((d) => setTeamPosts(d.posts.filter((p) => p.kind === 'team').length)).catch(() => {});
   }, []);
 
   const now = useMemo(() => new Date(), [data]);
@@ -78,6 +96,16 @@ export default function Dashboard() {
       </div>
 
       {spotlight && <Spotlight {...spotlight} now={now} />}
+
+      <nav className="section-tiles" aria-label="Browse by type">
+        {sectionTiles(events, clubCount, teamPosts).map((t) => (
+          <Link key={t.title} to={t.to} className={`section-tile ${t.tone}`}>
+            <span className="section-tile-title">{t.title}</span>
+            <span className="section-tile-stat">{data ? t.stat : '…'}</span>
+            <span className="section-tile-text">{t.text}</span>
+          </Link>
+        ))}
+      </nav>
 
       <div className="home-layout">
         <section className="home-main" aria-labelledby="coming-up">
@@ -114,17 +142,6 @@ export default function Dashboard() {
             </ul>
           </section>
 
-          <nav className="shortcuts" aria-label="Shortcuts">
-            {SHORTCUTS.map((s) => (
-              <Link key={s.to} to={s.to} className="shortcut">
-                <span className="shortcut-icon" aria-hidden="true"><s.Icon size={18} /></span>
-                <span>
-                  <strong>{s.title}</strong>
-                  <span className="muted">{s.text}</span>
-                </span>
-              </Link>
-            ))}
-          </nav>
         </aside>
       </div>
     </div>

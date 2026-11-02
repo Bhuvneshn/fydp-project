@@ -50,7 +50,7 @@ export default function EventDetail() {
         <aside className="detail-aside">
           <section className="panel when-card">
             <div className="when-row">
-              <DateBlock date={event.startAt} going={event.going} />
+              <DateBlock date={event.startAt} going={event.going} tone={event.layer} />
               <span>
                 <strong>{multiDay ? formatEventWhen(event) : formatLongDate(event.startAt)}</strong>
                 {!multiDay && <span className="muted">{formatTimeRange(event)}</span>}
@@ -94,7 +94,7 @@ export default function EventDetail() {
               {b && (
                 <div className="location-map">
                   <CampusMap
-                    markers={[{ id: b.code, lng: b.lng, lat: b.lat, text: b.code, going: event.going, label: b.name }]}
+                    markers={[{ id: b.code, lng: b.lng, lat: b.lat, text: b.code, going: event.going, tone: event.layer, label: b.name }]}
                     center={[b.lng, b.lat]}
                     zoom={16.3}
                     pitch={45}
