@@ -144,7 +144,7 @@ export default function Events() {
           layer:
             row.source === 'athletics'
               ? 'athletics'
-              : row.source === 'clubs'
+              : row.source === 'club'
                 ? 'clubs'
                 : row.source === 'student'
                   ? 'student'
