@@ -51,6 +51,8 @@ Re-run `npm run import:events` daily (e.g. cron) to keep events fresh.
 
 Open http://localhost:5173. Vite proxies `/api` to the Express server.
 
+To load the Events page from Supabase, copy `client/.env.example` to `client/.env.local` and fill in the project URL and publishable key. Without them, it uses the Express API.
+
 For production: `npm run build && npm start`, then Express serves the built React app and the API together on http://localhost:3000.
 
 ## Clubs directory
