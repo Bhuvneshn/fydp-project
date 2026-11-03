@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
+import { request } from '../api.js';
 import { supabase } from '../lib/supabase';
 import CampusMap from '../components/CampusMap.jsx';
 import EventCard from '../components/EventCard.jsx';
@@ -101,6 +102,18 @@ function isListed(row, now) {
   return !(row.source === 'athletics' && !row.building_code);
 }
 
+// RSVPs and student-run events live in our own database, so add them to the Supabase events.
+function mergeLocal(events, localEvents) {
+  const local = new Map(localEvents.map((e) => [e.id, e]));
+  const merged = events.map((e) => {
+    const match = local.get(e.id);
+    return match ? { ...e, going: match.going, goingCount: match.goingCount, isHost: match.isHost, host: match.host } : e;
+  });
+  const ids = new Set(events.map((e) => e.id));
+  const hosted = localEvents.filter((e) => e.source === 'student' && !ids.has(e.id));
+  return [...merged, ...hosted].sort((a, b) => a.startAt.localeCompare(b.startAt));
+}
+
 function parseCategories(value) {
   if (Array.isArray(value)) return value;
 
@@ -136,10 +149,13 @@ export default function Events() {
 
     async function loadEvents() {
       try {
-        const { data: rows, error: fetchError } = await supabase
-          .from('events')
-          .select('*, buildings(*)')
-          .order('start_at', { ascending: true });
+        const [{ data: rows, error: fetchError }, local] = await Promise.all([
+          supabase
+            .from('events')
+            .select('*, buildings(*)')
+            .order('start_at', { ascending: true }),
+          request('/api/events').catch(() => ({ events: [] })),
+        ]);
 
         if (fetchError) throw fetchError;
         if (cancelled) return;
@@ -165,7 +181,7 @@ export default function Events() {
           imageUrl: row.image_url,
         }));
 
-        setData({ events });
+        setData({ events: mergeLocal(events, local.events) });
       } catch (err) {
         if (!cancelled) {
           setError(err.message ?? 'Failed to load events');
