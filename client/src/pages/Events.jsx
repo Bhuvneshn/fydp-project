@@ -143,8 +143,13 @@ export default function Events() {
     q: params.get('q') ?? '',
   };
 
-  // Fetch events directly from Supabase.
+  // Fetch events directly from Supabase when it's set up, otherwise from our API.
   useEffect(() => {
+    if (!supabase) {
+      request('/api/events').then(setData).catch((err) => setError(err.message));
+      return;
+    }
+
     let cancelled = false;
 
     async function loadEvents() {
@@ -347,7 +352,7 @@ export default function Events() {
           )}
           {!data && <p className="empty">Loading events…</p>}
           {data && events.length === 0 && (
-            <p className="empty">No events yet. Add events in Supabase.</p>
+            <p className="empty">No events yet. Host one, or add some in Supabase.</p>
           )}
           {data && events.length > 0 && rows.length === 0 && <p className="empty">No events match these filters.</p>}
           {days.map((d) => (
