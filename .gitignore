@@ -3,3 +3,5 @@ data/
 .env
 .DS_Store
 client/dist/
+.env.local
+.env.*.local
