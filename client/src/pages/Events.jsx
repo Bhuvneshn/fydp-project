@@ -93,6 +93,14 @@ function dayGroups(rows, now, userPos) {
   });
 }
 
+// Same rules as GET /api/events: upcoming only, and no off-campus varsity games.
+const DAYS_AHEAD = 60;
+function isListed(row, now) {
+  if (new Date(row.end_at ?? row.start_at) < now) return false;
+  if (new Date(row.start_at) - now > DAYS_AHEAD * 864e5) return false;
+  return !(row.source === 'athletics' && !row.building_code);
+}
+
 function parseCategories(value) {
   if (Array.isArray(value)) return value;
 
@@ -136,7 +144,8 @@ export default function Events() {
         if (fetchError) throw fetchError;
         if (cancelled) return;
 
-        const events = (rows ?? []).map((row) => ({
+        const listedAt = new Date();
+        const events = (rows ?? []).filter((row) => isListed(row, listedAt)).map((row) => ({
           ...row,
           startAt: row.start_at,
           endAt: row.end_at,
