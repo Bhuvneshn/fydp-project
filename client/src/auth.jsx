@@ -4,14 +4,22 @@ import { SESSION_EXPIRED, api } from './api.js';
 const AuthContext = createContext(null);
 
 // The last known session, so a reload shows you as logged in right away instead of waiting on
-// the server (which may be mid-restart in development). The server's session cookie stays the
-// source of truth: a 401 from /me clears this.
-const CACHE_KEY = 'fydp.session';
+// the server (which may be mid-restart in development). It's only a hint: the server's session
+// cookie is the source of truth, and every load re-checks it with /me. Whatever the server
+// says (logged in, logged out, or broken), the cache follows within a few seconds, so it can't
+// keep you stuck after a database switch, a secret change or a server error.
+// Bump the version whenever the shape of /me changes; older caches are then ignored.
+const CACHE_KEY = 'fydp.session.v2';
+const OLD_CACHE_KEYS = ['fydp.session'];
 const RETRY_MS = [500, 1000, 2000, 4000];
+
+const isValidSession = (s) => s?.user?.id != null && typeof s.user.email === 'string';
 
 function readCache() {
   try {
-    return JSON.parse(localStorage.getItem(CACHE_KEY)) ?? undefined;
+    OLD_CACHE_KEYS.forEach((k) => localStorage.removeItem(k));
+    const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
+    return isValidSession(cached) ? cached : undefined;
   } catch {
     return undefined;
   }
@@ -29,25 +37,37 @@ function writeCache(session) {
 export function AuthProvider({ children }) {
   // undefined = still loading, null = logged out
   const [session, setSession] = useState(readCache);
+  // Set when the server can't confirm the session after retrying; the app shows a retry screen.
+  const [unavailable, setUnavailable] = useState(false);
+  const [checkCount, setCheckCount] = useState(0);
 
   useEffect(() => {
     if (session !== undefined) writeCache(session);
   }, [session]);
 
-  // Confirm the cached session with the server. Only "not logged in" logs you out; if the server
-  // is unreachable, keep the cached session and try again.
+  // Confirm the session with the server on every load. "Not logged in" logs you out right away.
+  // Anything else (server restarting, server error) is retried while the cached session is shown;
+  // if it keeps failing, the cache is dropped and the app says the server is unavailable.
   useEffect(() => {
     let cancelled = false;
     let timer;
     async function check(attempt = 0) {
       try {
         const me = await api('/me');
-        if (!cancelled) setSession(me);
+        if (cancelled) return;
+        setSession(isValidSession(me) ? me : null);
+        setUnavailable(false);
       } catch (err) {
         if (cancelled) return;
-        if (err.status === 401) setSession(null);
-        else if (attempt < RETRY_MS.length) timer = setTimeout(() => check(attempt + 1), RETRY_MS[attempt]);
-        else setSession((s) => s ?? null);
+        if (err.status === 401) {
+          setSession(null);
+          setUnavailable(false);
+        } else if (attempt < RETRY_MS.length) {
+          timer = setTimeout(() => check(attempt + 1), RETRY_MS[attempt]);
+        } else {
+          writeCache(null);
+          setUnavailable(true);
+        }
       }
     }
     check();
@@ -55,7 +75,7 @@ export function AuthProvider({ children }) {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, []);
+  }, [checkCount]);
 
   useEffect(() => {
     const expire = () => setSession(null);
@@ -64,7 +84,12 @@ export function AuthProvider({ children }) {
   }, []);
 
   const value = {
-    loading: session === undefined,
+    loading: session === undefined && !unavailable,
+    unavailable,
+    retry() {
+      setUnavailable(false);
+      setCheckCount((n) => n + 1);
+    },
     user: session?.user ?? null,
     needsVerification: Boolean(session?.verificationRequired && !session.user.emailVerified),
     async login(email, password) {
@@ -78,7 +103,8 @@ export function AuthProvider({ children }) {
       setSession((s) => ({ ...s, user }));
     },
     async logout() {
-      await api('/logout', {});
+      // Log out locally even if the server can't be reached.
+      await api('/logout', {}).catch(() => {});
       setSession(null);
     },
   };

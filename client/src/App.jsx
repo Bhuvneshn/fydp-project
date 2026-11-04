@@ -30,7 +30,24 @@ function Guard({ need, children }) {
 
 const centered = (page) => <AuthLayout>{page}</AuthLayout>;
 
+// Shown instead of any page when the server can't confirm who you are, rather than a page
+// that half-loads with errors.
+function ServerUnavailable() {
+  const { retry } = useAuth();
+  return centered(
+    <div className="auth-form">
+      <div className="auth-head">
+        <h1>Can't reach the server</h1>
+        <p className="lede">The app couldn't check your login. If you're running it locally, check the terminal running npm run dev for errors.</p>
+      </div>
+      <button type="button" className="btn btn-primary btn-lg btn-block" onClick={retry}>Try again</button>
+    </div>
+  );
+}
+
 export default function App() {
+  const { unavailable } = useAuth();
+  if (unavailable) return <ServerUnavailable />;
   return (
     <Routes>
       <Route path="/login" element={<Guard need="guest">{centered(<Login />)}</Guard>} />
