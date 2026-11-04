@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { request } from '../api.js';
-import { supabase } from '../lib/supabase';
+import { supabase, toEvent } from '../lib/supabase';
 import CampusMap from '../components/CampusMap.jsx';
 import EventCard from '../components/EventCard.jsx';
 import { CloseIcon, LocateIcon, SearchIcon } from '../components/Icons.jsx';
@@ -102,31 +102,11 @@ function isListed(row, now) {
   return !(row.source === 'athletics' && !row.building_code);
 }
 
-// RSVPs and student-run events live in our own database, so add them to the Supabase events.
+// Our own database has the imported events, RSVPs and hosted events, so Supabase only adds to them.
 function mergeLocal(events, localEvents) {
-  const local = new Map(localEvents.map((e) => [e.id, e]));
-  const merged = events.map((e) => {
-    const match = local.get(e.id);
-    return match ? { ...e, going: match.going, goingCount: match.goingCount, isHost: match.isHost, host: match.host } : e;
-  });
-  const ids = new Set(events.map((e) => e.id));
-  const hosted = localEvents.filter((e) => e.source === 'student' && !ids.has(e.id));
-  return [...merged, ...hosted].sort((a, b) => a.startAt.localeCompare(b.startAt));
-}
-
-function parseCategories(value) {
-  if (Array.isArray(value)) return value;
-
-  if (typeof value === 'string') {
-    try {
-      const parsed = JSON.parse(value);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  }
-
-  return [];
+  const ids = new Set(localEvents.map((e) => e.id));
+  const added = events.filter((e) => !ids.has(e.id));
+  return [...localEvents, ...added].sort((a, b) => a.startAt.localeCompare(b.startAt));
 }
 
 export default function Events() {
@@ -143,58 +123,36 @@ export default function Events() {
     q: params.get('q') ?? '',
   };
 
-  // Fetch events directly from Supabase when it's set up, otherwise from our API.
+  // Show our API's events straight away, then add any from Supabase. Supabase retries
+  // for a while when it's down, so it shouldn't hold up the page.
   useEffect(() => {
-    if (!supabase) {
-      request('/api/events').then(setData).catch((err) => setError(err.message));
-      return;
-    }
-
     let cancelled = false;
+    const local = request('/api/events');
 
-    async function loadEvents() {
-      try {
-        const [{ data: rows, error: fetchError }, local] = await Promise.all([
-          supabase
-            .from('events')
-            .select('*, buildings(*)')
-            .order('start_at', { ascending: true }),
-          request('/api/events').catch(() => ({ events: [] })),
-        ]);
+    local
+      .then((result) => {
+        if (!cancelled) setData(result);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message);
+      });
 
-        if (fetchError) throw fetchError;
-        if (cancelled) return;
+    async function addSupabaseEvents() {
+      const [{ data: rows }, result] = await Promise.all([
+        supabase
+          .from('events')
+          .select('*, buildings(*)')
+          .order('start_at', { ascending: true }),
+        local,
+      ]);
+      if (cancelled || !rows) return;
 
-        const listedAt = new Date();
-        const events = (rows ?? []).filter((row) => isListed(row, listedAt)).map((row) => ({
-          ...row,
-          startAt: row.start_at,
-          endAt: row.end_at,
-          allDay: Boolean(row.all_day),
-          layer:
-            row.source === 'athletics'
-              ? 'athletics'
-              : row.source === 'club'
-                ? 'clubs'
-                : row.source === 'student'
-                  ? 'student'
-                  : 'campus',
-          categories: parseCategories(row.categories),
-          going: false,
-          building: row.buildings ?? null,
-          host: row.organizer ?? null,
-          imageUrl: row.image_url,
-        }));
-
-        setData({ events: mergeLocal(events, local.events) });
-      } catch (err) {
-        if (!cancelled) {
-          setError(err.message ?? 'Failed to load events');
-        }
-      }
+      const listedAt = new Date();
+      const events = rows.filter((row) => isListed(row, listedAt)).map((row) => toEvent(row));
+      setData({ ...result, events: mergeLocal(events, result.events) });
     }
 
-    loadEvents();
+    if (supabase) addSupabaseEvents().catch(() => {});
 
     return () => {
       cancelled = true;
