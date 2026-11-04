@@ -51,12 +51,9 @@ db.exec(`
     associated_clubs       TEXT NOT NULL DEFAULT '[]',
     gallery                TEXT NOT NULL DEFAULT '[]',
     wusa_last_updated      TEXT,
-    scraped_at             TEXT NOT NULL,
-    -- Instagram activity (see server/clubs/instagram.js)
-    instagram_handle       TEXT,
-    ig_last_post_at        TEXT,
-    ig_checked_at          TEXT,
-    ig_check_error         TEXT
+    scraped_at             TEXT NOT NULL
+    -- Databases created before the Instagram check was removed also have unused
+    -- instagram_handle / ig_* columns; they're harmless and left alone.
   );
 
   -- Campus buildings from UW's map API (see server/events/importBuildings.js).
