@@ -13,7 +13,7 @@ const cleanText = (v, max) => {
 };
 
 // Returns [row values, error]. Dates and times are Waterloo wall-clock ("2026-11-05", "19:00").
-export function validateHostedEvent(body, now = new Date()) {
+export async function validateHostedEvent(body, now = new Date()) {
   const title = cleanText(body.title, 100);
   if (!title) return [null, 'Give your event a name.'];
   if (!HOSTED_CATEGORIES.includes(body.category)) return [null, 'Choose a category.'];
@@ -35,7 +35,7 @@ export function validateHostedEvent(body, now = new Date()) {
   let buildingCode = null;
   let location;
   if (body.buildingCode) {
-    const building = db.prepare('SELECT code, name FROM buildings WHERE code = ?').get(String(body.buildingCode));
+    const building = await db.prepare('SELECT code, name FROM buildings WHERE code = ?').get(String(body.buildingCode));
     if (!building) return [null, 'Choose a campus building.'];
     buildingCode = building.code;
     const room = cleanText(body.room, 40);

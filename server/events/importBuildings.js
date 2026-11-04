@@ -15,7 +15,7 @@ export async function importBuildings() {
   const upsert = db.prepare(`
     INSERT INTO buildings (code, name, alt_names, lat, lng, updated_at)
     VALUES (?, ?, ?, ?, ?, ?)
-    ON CONFLICT(code) DO UPDATE SET
+    ON CONFLICT (code) DO UPDATE SET
       name = excluded.name, alt_names = excluded.alt_names,
       lat = excluded.lat, lng = excluded.lng, updated_at = excluded.updated_at
   `);
@@ -29,7 +29,7 @@ export async function importBuildings() {
       .split(/[,;]/)
       .map((s) => s.trim())
       .filter(Boolean);
-    upsert.run(p.buildingCode.toUpperCase(), p.buildingName.trim(), JSON.stringify(altNames), lat, lng, now);
+    await upsert.run(p.buildingCode.toUpperCase(), p.buildingName.trim(), JSON.stringify(altNames), lat, lng, now);
     saved++;
   }
   return saved;

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { request } from '../api.js';
-import { supabase, toEvent } from '../lib/supabase';
 import CampusMap from '../components/CampusMap.jsx';
 import EventCard from '../components/EventCard.jsx';
 import { CloseIcon, LocateIcon, SearchIcon } from '../components/Icons.jsx';
@@ -94,21 +93,6 @@ function dayGroups(rows, now, userPos) {
   });
 }
 
-// Same rules as GET /api/events: upcoming only, and no off-campus varsity games.
-const DAYS_AHEAD = 60;
-function isListed(row, now) {
-  if (new Date(row.end_at ?? row.start_at) < now) return false;
-  if (new Date(row.start_at) - now > DAYS_AHEAD * 864e5) return false;
-  return !(row.source === 'athletics' && !row.building_code);
-}
-
-// Our own database has the imported events, RSVPs and hosted events, so Supabase only adds to them.
-function mergeLocal(events, localEvents) {
-  const ids = new Set(localEvents.map((e) => e.id));
-  const added = events.filter((e) => !ids.has(e.id));
-  return [...localEvents, ...added].sort((a, b) => a.startAt.localeCompare(b.startAt));
-}
-
 export default function Events() {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
@@ -123,40 +107,8 @@ export default function Events() {
     q: params.get('q') ?? '',
   };
 
-  // Show our API's events straight away, then add any from Supabase. Supabase retries
-  // for a while when it's down, so it shouldn't hold up the page.
   useEffect(() => {
-    let cancelled = false;
-    const local = request('/api/events');
-
-    local
-      .then((result) => {
-        if (!cancelled) setData(result);
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err.message);
-      });
-
-    async function addSupabaseEvents() {
-      const [{ data: rows }, result] = await Promise.all([
-        supabase
-          .from('events')
-          .select('*, buildings(*)')
-          .order('start_at', { ascending: true }),
-        local,
-      ]);
-      if (cancelled || !rows) return;
-
-      const listedAt = new Date();
-      const events = rows.filter((row) => isListed(row, listedAt)).map((row) => toEvent(row));
-      setData({ ...result, events: mergeLocal(events, result.events) });
-    }
-
-    if (supabase) addSupabaseEvents().catch(() => {});
-
-    return () => {
-      cancelled = true;
-    };
+    request('/api/events').then(setData).catch((err) => setError(err.message));
   }, []);
 
   const now = useMemo(() => new Date(), [data]);
@@ -310,7 +262,7 @@ export default function Events() {
           )}
           {!data && <p className="empty">Loading events…</p>}
           {data && events.length === 0 && (
-            <p className="empty">No events yet. Host one, or add some in Supabase.</p>
+            <p className="empty">No events yet. Host one to get things started.</p>
           )}
           {data && events.length > 0 && rows.length === 0 && <p className="empty">No events match these filters.</p>}
           {days.map((d) => (

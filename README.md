@@ -5,7 +5,7 @@ Campus life app for UWaterloo students: an events map where students can also ho
 ## Stack
 
 - **Frontend** (`client/`): React 19 + React Router, built with Vite
-- **Backend** (`server/`): Node.js 22.13+ with Express 5, `express-session` cookie sessions, `bcryptjs` password hashing, and the built-in `node:sqlite` module (no native deps)
+- **Backend** (`server/`): Node.js 22.13+ with Express 5, `express-session` cookie sessions, `bcryptjs` password hashing, and Postgres through `pg`, hosted on Supabase
 
 ```
 client/            React app
@@ -51,7 +51,7 @@ Re-run `npm run import:events` daily (e.g. cron) to keep events fresh.
 
 Open http://localhost:5173. Vite proxies `/api` to the Express server.
 
-To add events from Supabase to the Events page, run `supabase/schema.sql` and `supabase/seed.sql` in your project's SQL editor, then copy `client/.env.example` to `client/.env.local` and fill in the project URL and publishable key. These events show as student-run and are view-only for now, since RSVPs and buddy pairing need an event in our own database. Without the keys, the page only uses the Express API.
+All data lives in Postgres. Set `DATABASE_URL` in `.env`, then run `npm run db:setup` to create the tables and add the demo events (`supabase/schema.sql` and `supabase/seed.sql`). It's safe to run again. Only the server talks to the database, so the client needs no Supabase keys. `npm run db:copy-sqlite` copies an old `data/app.db` across once, without accounts unless you add `-- --with-users`.
 
 For production: `npm run build && npm start`, then Express serves the built React app and the API together on http://localhost:3000.
 
@@ -119,7 +119,7 @@ Intramural registration itself stays on warrior.uwaterloo.ca (its robots.txt dis
 
 ## Sessions
 
-Logins last 30 days from your last visit. Sessions are stored in the `sessions` table in SQLite (`server/sessionStore.js`), so restarting the server, including `node --watch` reloads in development, doesn't log anyone out. The browser also keeps the signed-in user in localStorage so pages render immediately; the server's cookie is still the source of truth, and the app returns to the login page only when the API says the session is gone, not when the server is briefly unreachable. Set `SESSION_SECRET` in production; changing it logs everyone out.
+Logins last 30 days from your last visit. Sessions are stored in the `sessions` table in Postgres (`server/sessionStore.js`), so restarting the server, including `node --watch` reloads in development, doesn't log anyone out. The browser also keeps the signed-in user in localStorage so pages render immediately; the server's cookie is still the source of truth, and the app returns to the login page only when the API says the session is gone, not when the server is briefly unreachable. Set `SESSION_SECRET` in production; changing it logs everyone out.
 
 ## How the email restriction works
 

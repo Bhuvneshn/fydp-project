@@ -2,7 +2,7 @@ import express from 'express';
 import session from 'express-session';
 import path from 'node:path';
 import { authRouter } from './auth.js';
-import { SqliteSessionStore } from './sessionStore.js';
+import { PostgresSessionStore } from './sessionStore.js';
 import { clubsRouter } from './clubs/routes.js';
 import { eventsRouter } from './events/routes.js';
 import { teamsRouter } from './athletics/teams.js';
@@ -21,7 +21,7 @@ app.use(
   '/api',
   session({
     name: 'sid',
-    store: new SqliteSessionStore(),
+    store: new PostgresSessionStore(),
     secret: process.env.SESSION_SECRET ?? 'dev-only-secret-change-me',
     resave: false,
     saveUninitialized: false,

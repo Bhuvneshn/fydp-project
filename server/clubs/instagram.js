@@ -47,7 +47,7 @@ async function main() {
   }
 
   const cutoff = new Date(Date.now() - RECHECK_AFTER_MS).toISOString();
-  const clubs = db
+  const clubs = await db
     .prepare(
       `SELECT id, name, instagram_handle FROM clubs
        WHERE instagram_handle IS NOT NULL ${force ? '' : 'AND (ig_checked_at IS NULL OR ig_checked_at < ?)'}
@@ -63,7 +63,7 @@ async function main() {
   for (const [i, club] of clubs.entries()) {
     try {
       const latest = await fetchLatestPostAt(club.instagram_handle);
-      save.run(latest, latest ? null : 'No posts', new Date().toISOString(), club.id);
+      await save.run(latest, latest ? null : 'No posts', new Date().toISOString(), club.id);
       console.log(`  [${i + 1}/${clubs.length}] @${club.instagram_handle}: ${latest ?? 'no posts'}`);
     } catch (err) {
       if (err.rateLimited) {
@@ -71,7 +71,7 @@ async function main() {
         break;
       }
       const message = err.notDiscoverable ? 'Not a public Business/Creator account' : err.message;
-      save.run(null, message, new Date().toISOString(), club.id);
+      await save.run(null, message, new Date().toISOString(), club.id);
       console.warn(`  [${i + 1}/${clubs.length}] @${club.instagram_handle}: ${message}`);
     }
     if (i < clubs.length - 1) await sleep(DELAY_MS);

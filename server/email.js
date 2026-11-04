@@ -24,8 +24,8 @@ export async function issueVerificationCode(user) {
   const code = generateCode();
   const codeHash = await bcrypt.hash(code, 10);
 
-  db.prepare('DELETE FROM verification_codes WHERE user_id = ?').run(user.id);
-  db.prepare(
+  await db.prepare('DELETE FROM verification_codes WHERE user_id = ?').run(user.id);
+  await db.prepare(
     'INSERT INTO verification_codes (user_id, code_hash, expires_at) VALUES (?, ?, ?)'
   ).run(user.id, codeHash, Date.now() + CODE_TTL_MS);
 
@@ -34,7 +34,7 @@ export async function issueVerificationCode(user) {
 
 // Returns null on success, or an error message.
 export async function checkVerificationCode(userId, code) {
-  const row = db
+  const row = await db
     .prepare('SELECT * FROM verification_codes WHERE user_id = ?')
     .get(userId);
 
@@ -42,14 +42,14 @@ export async function checkVerificationCode(userId, code) {
   if (Date.now() > row.expires_at) return 'Code expired. Request a new one.';
   if (row.attempts >= MAX_ATTEMPTS) return 'Too many attempts. Request a new one.';
 
-  db.prepare('UPDATE verification_codes SET attempts = attempts + 1 WHERE id = ?').run(row.id);
+  await db.prepare('UPDATE verification_codes SET attempts = attempts + 1 WHERE id = ?').run(row.id);
 
   if (!(await bcrypt.compare(String(code ?? ''), row.code_hash))) {
     return 'Incorrect code.';
   }
 
-  db.prepare('DELETE FROM verification_codes WHERE user_id = ?').run(userId);
-  db.prepare('UPDATE users SET email_verified = 1 WHERE id = ?').run(userId);
+  await db.prepare('DELETE FROM verification_codes WHERE user_id = ?').run(userId);
+  await db.prepare('UPDATE users SET email_verified = 1 WHERE id = ?').run(userId);
   return null;
 }
 

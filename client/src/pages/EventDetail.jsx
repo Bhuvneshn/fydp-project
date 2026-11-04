@@ -5,7 +5,6 @@ import CampusMap from '../components/CampusMap.jsx';
 import { DateBlock, LayerTag } from '../components/EventCard.jsx';
 import { BackIcon, CheckIcon, ExternalIcon, ShareIcon, UsersIcon } from '../components/Icons.jsx';
 import { dateKey, eventStatus, formatEventWhen, formatLongDate, formatTime, formatTimeRange } from '../eventTime.js';
-import { fetchEvent } from '../lib/supabase';
 
 export default function EventDetail() {
   const { id } = useParams();
@@ -16,12 +15,7 @@ export default function EventDetail() {
     setEvent(null);
     request(`/api/events/${encodeURIComponent(id)}`)
       .then((d) => setEvent(d.event))
-      .catch(async (err) => {
-        // Our API doesn't have events that are only in Supabase.
-        const found = await fetchEvent(id).catch(() => null);
-        if (found) setEvent(found);
-        else setError(err.message);
-      });
+      .catch((err) => setError(err.message));
   }, [id]);
 
   if (error) return <p className="error">{error}</p>;
@@ -125,20 +119,18 @@ export default function EventDetail() {
             </div>
           </section>
 
-          {!event.viewOnly && (
-            <section className="detail-section">
-              <h2>Who's going</h2>
-              <div className="guests">
-                {event.attendees.length > 0 && <Avatars handles={event.attendees} />}
-                <span>
-                  <strong>{event.goingCount} going</strong>
-                  <span className="muted">
-                    {event.goingCount === 0 ? 'Be the first to join.' : event.going && event.goingCount === 1 ? "You're the first. Share it with friends." : ''}
-                  </span>
+          <section className="detail-section">
+            <h2>Who's going</h2>
+            <div className="guests">
+              {event.attendees.length > 0 && <Avatars handles={event.attendees} />}
+              <span>
+                <strong>{event.goingCount} going</strong>
+                <span className="muted">
+                  {event.goingCount === 0 ? 'Be the first to join.' : event.going && event.goingCount === 1 ? "You're the first. Share it with friends." : ''}
                 </span>
-              </div>
-            </section>
-          )}
+              </span>
+            </div>
+          </section>
         </div>
       </div>
     </article>
@@ -192,7 +184,7 @@ function BuddyCard({ event, onChange }) {
   const { pairing } = event;
   const ended = new Date(event.endAt ?? event.startAt) < new Date();
   const full = event.capacity != null && event.goingCount >= event.capacity;
-  if (event.viewOnly || event.isHost || ended || (full && !event.going)) return null;
+  if (event.isHost || ended || (full && !event.going)) return null;
 
   const meetAt = pairing.meetAt ? formatTime(pairing.meetAt) : null;
   const place = event.building?.name ?? event.location;
@@ -299,9 +291,7 @@ function Rsvp({ event, onChange }) {
 
   return (
     <>
-      {event.viewOnly ? (
-        <p className="muted center">Joining isn't open for this event yet.</p>
-      ) : event.isHost ? (
+      {event.isHost ? (
         <>
           <span className="btn btn-going btn-lg btn-block" role="status"><CheckIcon size={18} />You're hosting</span>
           <button type="button" className="btn btn-danger btn-block" disabled={busy} onClick={cancelEvent}>Cancel event</button>

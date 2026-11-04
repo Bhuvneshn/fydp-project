@@ -79,9 +79,9 @@ const upsert = db.prepare(`
   VALUES (${COLUMNS.map((c) => `:${c}`).join(', ')})
   ON CONFLICT(id) DO UPDATE SET
     ${COLUMNS.filter((c) => c !== 'id').map((c) => `${c} = excluded.${c}`).join(',\n    ')},
-    ig_last_post_at = CASE WHEN clubs.instagram_handle IS excluded.instagram_handle THEN clubs.ig_last_post_at END,
-    ig_checked_at   = CASE WHEN clubs.instagram_handle IS excluded.instagram_handle THEN clubs.ig_checked_at END,
-    ig_check_error  = CASE WHEN clubs.instagram_handle IS excluded.instagram_handle THEN clubs.ig_check_error END
+    ig_last_post_at = CASE WHEN clubs.instagram_handle IS NOT DISTINCT FROM excluded.instagram_handle THEN clubs.ig_last_post_at END,
+    ig_checked_at   = CASE WHEN clubs.instagram_handle IS NOT DISTINCT FROM excluded.instagram_handle THEN clubs.ig_checked_at END,
+    ig_check_error  = CASE WHEN clubs.instagram_handle IS NOT DISTINCT FROM excluded.instagram_handle THEN clubs.ig_check_error END
 `);
 
 async function mapConcurrent(items, limit, fn) {
@@ -100,7 +100,7 @@ async function main() {
   const failed = [];
   await mapConcurrent(ids, CONCURRENCY, async (id) => {
     try {
-      upsert.run(toRow(await getJson(`${API}/clubs/${id}/profile`)));
+      await upsert.run(toRow(await getJson(`${API}/clubs/${id}/profile`)));
     } catch (err) {
       failed.push(`${id}: ${err.message}`);
     }
@@ -108,8 +108,7 @@ async function main() {
   });
 
   // Drop clubs that no longer appear in the directory.
-  const placeholders = ids.map(() => '?').join(',');
-  const { changes } = db.prepare(`DELETE FROM clubs WHERE id NOT IN (${placeholders})`).run(...ids);
+  const { changes } = await db.prepare('DELETE FROM clubs WHERE id <> ALL(?::int[])').run(ids);
 
   console.log(`Saved ${ids.length - failed.length} clubs, removed ${changes} stale.`);
   if (failed.length) console.warn(`Failed (${failed.length}):\n  ${failed.join('\n  ')}`);

@@ -2,7 +2,7 @@
 // Usage: npm run import:events
 import { db } from '../db.js';
 import { importBuildings } from './importBuildings.js';
-import { resolveBuilding } from './locate.js';
+import { loadBuildings, resolveBuilding } from './locate.js';
 import { fetchWusaEvents } from './sources/wusa.js';
 import { fetchUWaterlooEvents } from './sources/uwaterloo.js';
 import { fetchAthleticsEvents } from './sources/athletics.js';
@@ -10,6 +10,7 @@ import { fetchClubEvents } from './sources/clubs.js';
 
 const DAYS_AHEAD = 120;
 const KEEP_PAST_DAYS = 30;
+const MIN_BUILDINGS = 50;
 
 const SOURCES = {
   wusa: async (range) => ({ events: await fetchWusaEvents(range), failures: [] }),
@@ -24,7 +25,7 @@ const upsert = db.prepare(`
                       building_code, url, image_url, organizer, categories, cost, extra, imported_at)
   VALUES (:id, :source, :feed, :title, :description, :start_at, :end_at, :all_day, :location,
           :building_code, :url, :image_url, :organizer, :categories, :cost, :extra, :imported_at)
-  ON CONFLICT(id) DO UPDATE SET
+  ON CONFLICT (id) DO UPDATE SET
     feed = excluded.feed, title = excluded.title, description = excluded.description,
     start_at = excluded.start_at, end_at = excluded.end_at, all_day = excluded.all_day,
     location = excluded.location, building_code = excluded.building_code, url = excluded.url,
@@ -56,9 +57,11 @@ function toRow(e, importedAt) {
 }
 
 export async function importEvents(sourceNames = Object.keys(SOURCES)) {
-  if (db.prepare('SELECT COUNT(*) AS n FROM buildings').get().n === 0) {
+  // A few buildings come from seed.sql, so ask for the full list rather than any at all.
+  if ((await db.prepare('SELECT COUNT(*) AS n FROM buildings').get()).n < MIN_BUILDINGS) {
     console.log(`Imported ${await importBuildings()} buildings.`);
   }
+  await loadBuildings();
 
   const today = new Date();
   const range = {
@@ -77,12 +80,12 @@ export async function importEvents(sourceNames = Object.keys(SOURCES)) {
     }
 
     const rows = result.events.map((e) => toRow(e, importedAt));
-    rows.forEach((r) => upsert.run(r));
+    for (const row of rows) await upsert.run(row);
 
     // Drop upcoming events this source no longer lists (cancelled / moved), unless a sub-feed failed.
     let removed = 0;
     if (result.failures.length === 0) {
-      ({ changes: removed } = db
+      ({ changes: removed } = await db
         .prepare('DELETE FROM events WHERE source = ? AND start_at >= ? AND imported_at < ?')
         .run(name, importedAt, importedAt));
     }
@@ -93,7 +96,7 @@ export async function importEvents(sourceNames = Object.keys(SOURCES)) {
   }
 
   const cutoff = new Date(Date.now() - KEEP_PAST_DAYS * 864e5).toISOString();
-  db.prepare('DELETE FROM events WHERE COALESCE(end_at, start_at) < ?').run(cutoff);
+  await db.prepare('DELETE FROM events WHERE COALESCE(end_at, start_at) < ?').run(cutoff);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

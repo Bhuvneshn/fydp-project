@@ -1,153 +1,76 @@
-import { DatabaseSync } from 'node:sqlite';
-import { mkdirSync } from 'node:fs';
-import path from 'node:path';
+import { AsyncLocalStorage } from 'node:async_hooks';
+import pg from 'pg';
 
-const dataDir = path.resolve(process.env.DATA_DIR ?? 'data');
-mkdirSync(dataDir, { recursive: true });
+const url = process.env.DATABASE_URL;
+if (!url) throw new Error('DATABASE_URL must be set. See .env.example.');
 
-export const db = new DatabaseSync(path.join(dataDir, 'app.db'));
+// BIGINT columns and COUNT(*) all fit in a JS number (row counts, ms since epoch).
+pg.types.setTypeParser(pg.types.builtins.INT8, Number);
 
-db.exec(`
-  PRAGMA foreign_keys = ON;
+const isLocal = /@(localhost|127\.0\.0\.1)[:/]/.test(url);
+const pool = new pg.Pool({
+  connectionString: url,
+  max: Number(process.env.DATABASE_POOL_SIZE ?? 5),
+  // Supabase's pooler uses its own certificate chain.
+  ssl: isLocal ? false : { rejectUnauthorized: false },
+  // Lets the import scripts exit when they finish.
+  allowExitOnIdle: true,
+});
+pool.on('error', (err) => console.error('Database connection error:', err.message));
 
-  CREATE TABLE IF NOT EXISTS users (
-    id             INTEGER PRIMARY KEY AUTOINCREMENT,
-    email          TEXT    NOT NULL UNIQUE,
-    password_hash  TEXT    NOT NULL,
-    email_verified INTEGER NOT NULL DEFAULT 0,
-    created_at     TEXT    NOT NULL DEFAULT (datetime('now'))
-  );
+// The client for the current transaction, so statements inside one join it automatically.
+const transactions = new AsyncLocalStorage();
+const conn = () => transactions.getStore() ?? pool;
 
-  -- One-time codes emailed during registration (see server/email.js).
-  CREATE TABLE IF NOT EXISTS verification_codes (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    code_hash  TEXT    NOT NULL,
-    expires_at INTEGER NOT NULL,
-    attempts   INTEGER NOT NULL DEFAULT 0
-  );
-
-  -- Scraped from clubs.wusa.ca (see server/clubs/scrapeWusa.js).
-  -- categories / socials / associated_clubs / gallery are JSON arrays.
-  CREATE TABLE IF NOT EXISTS clubs (
-    id                     INTEGER PRIMARY KEY, -- WUSA club id
-    slug                   TEXT,
-    name                   TEXT NOT NULL,
-    acronym                TEXT,
-    tagline                TEXT,
-    description            TEXT,
-    year_started           INTEGER,
-    member_count           INTEGER,
-    executive_count        INTEGER,
-    logo_url               TEXT,
-    email                  TEXT,
-    wusa_active_this_term  INTEGER NOT NULL DEFAULT 0,
-    current_term_name      TEXT,
-    membership_and_meeting TEXT,
-    activities             TEXT,
-    other                  TEXT,
-    categories             TEXT NOT NULL DEFAULT '[]',
-    socials                TEXT NOT NULL DEFAULT '[]',
-    associated_clubs       TEXT NOT NULL DEFAULT '[]',
-    gallery                TEXT NOT NULL DEFAULT '[]',
-    wusa_last_updated      TEXT,
-    scraped_at             TEXT NOT NULL,
-    -- Instagram activity (see server/clubs/instagram.js)
-    instagram_handle       TEXT,
-    ig_last_post_at        TEXT,
-    ig_checked_at          TEXT,
-    ig_check_error         TEXT
-  );
-
-  -- Campus buildings from UW's map API (see server/events/importBuildings.js).
-  CREATE TABLE IF NOT EXISTS buildings (
-    code       TEXT PRIMARY KEY,
-    name       TEXT NOT NULL,
-    alt_names  TEXT NOT NULL DEFAULT '[]',
-    lat        REAL NOT NULL,
-    lng        REAL NOT NULL,
-    updated_at TEXT NOT NULL
-  );
-
-  -- Imported events (see server/events/importEvents.js). id is "<source>:<source id>".
-  CREATE TABLE IF NOT EXISTS events (
-    id            TEXT PRIMARY KEY,
-    source        TEXT NOT NULL,      -- wusa | uwaterloo | athletics | club | student
-    feed          TEXT,               -- sub-feed, e.g. "Engineering"
-    title         TEXT NOT NULL,
-    description   TEXT,
-    start_at      TEXT NOT NULL,      -- ISO 8601 UTC
-    end_at        TEXT,
-    all_day       INTEGER NOT NULL DEFAULT 0,
-    location      TEXT,               -- raw location text from the source
-    building_code TEXT REFERENCES buildings(code),
-    url           TEXT,
-    image_url     TEXT,
-    organizer     TEXT,
-    categories    TEXT NOT NULL DEFAULT '[]',
-    cost          TEXT,
-    extra         TEXT NOT NULL DEFAULT '{}', -- source-specific fields
-    imported_at   TEXT NOT NULL,
-    -- Student-run events created in the app (see server/events/hosted.js).
-    host_user_id  INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    capacity      INTEGER
-  );
-  CREATE INDEX IF NOT EXISTS events_start_at ON events(start_at);
-
-  -- "Going" on any event, imported or student-run.
-  CREATE TABLE IF NOT EXISTS event_rsvps (
-    event_id   TEXT    NOT NULL REFERENCES events(id) ON DELETE CASCADE,
-    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    created_at TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-    PRIMARY KEY (event_id, user_id)
-  );
-
-  -- Buddy pairing for students going alone (see server/events/buddies.js).
-  -- One row per opted-in user; buddy_user_id is set on both rows once two are matched.
-  CREATE TABLE IF NOT EXISTS event_buddies (
-    event_id      TEXT    NOT NULL,
-    user_id       INTEGER NOT NULL,
-    buddy_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-    created_at    TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-    PRIMARY KEY (event_id, user_id),
-    FOREIGN KEY (event_id, user_id) REFERENCES event_rsvps(event_id, user_id) ON DELETE CASCADE
-  );
-
-  -- Intramural team finder (see server/athletics/teams.js).
-  -- kind 'team': a team with players_have of team_size looking for more.
-  -- kind 'player': a free agent looking for a team.
-  CREATE TABLE IF NOT EXISTS team_posts (
-    id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    kind         TEXT    NOT NULL CHECK (kind IN ('team', 'player')),
-    sport        TEXT    NOT NULL,
-    division     TEXT,
-    skill        TEXT,
-    team_name    TEXT,
-    players_have INTEGER,
-    team_size    INTEGER,
-    note         TEXT,
-    status       TEXT    NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'filled', 'closed')),
-    created_at   TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-    updated_at   TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
-  );
-
-  -- "I'm in" requests on a post; the poster accepts or declines.
-  CREATE TABLE IF NOT EXISTS team_responses (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    post_id    INTEGER NOT NULL REFERENCES team_posts(id) ON DELETE CASCADE,
-    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    message    TEXT,
-    status     TEXT    NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined')),
-    created_at TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-    UNIQUE (post_id, user_id)
-  );
-`);
-
-// Columns added after the first release; CREATE TABLE IF NOT EXISTS won't add them to old databases.
-function addColumn(table, column, definition) {
-  const columns = db.prepare(`PRAGMA table_info(${table})`).all();
-  if (!columns.some((c) => c.name === column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+// Turns ? and :name placeholders into $1, $2... String literals and :: casts are left alone.
+function compile(sql) {
+  const keys = [];
+  let positional = 0;
+  const text = sql.replace(/'[^']*'|::|\?|:([a-zA-Z_]\w*)/g, (match, name) => {
+    if (match === '?') return `$${keys.push(positional++)}`;
+    if (!name) return match;
+    const seen = keys.indexOf(name);
+    return `$${seen === -1 ? keys.push(name) : seen + 1}`;
+  });
+  return { text, keys, named: positional === 0 && keys.length > 0 };
 }
-addColumn('events', 'host_user_id', 'INTEGER REFERENCES users(id) ON DELETE CASCADE');
-addColumn('events', 'capacity', 'INTEGER');
+
+export const db = {
+  prepare(sql) {
+    const { text, keys, named } = compile(sql);
+    const query = (args) => {
+      const source = named ? args[0] : args;
+      return conn().query(text, keys.map((key) => source[key]));
+    };
+    return {
+      get: async (...args) => (await query(args)).rows[0],
+      all: async (...args) => (await query(args)).rows,
+      run: async (...args) => ({ changes: (await query(args)).rowCount }),
+    };
+  },
+
+  exec: (sql) => conn().query(sql),
+
+  // Rolls back if fn throws. Calling this inside another transaction just joins it.
+  async transaction(fn) {
+    if (transactions.getStore()) return fn();
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const result = await transactions.run(client, fn);
+      await client.query('COMMIT');
+      return result;
+    } catch (err) {
+      await client.query('ROLLBACK').catch(() => {});
+      throw err;
+    } finally {
+      client.release();
+    }
+  },
+};
+
+// A URL id as an INTEGER. Anything else becomes 0, which matches no row.
+export function toId(value) {
+  const id = Number(value);
+  return Number.isInteger(id) && id > 0 && id <= 2_147_483_647 ? id : 0;
+}
