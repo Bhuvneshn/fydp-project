@@ -11,7 +11,9 @@ const app = express();
 const port = Number(process.env.PORT ?? 3000);
 const isProd = process.env.NODE_ENV === 'production';
 
-if (isProd && !process.env.SESSION_SECRET) {
+// An empty SESSION_SECRET= line (as copied from .env.example) counts as unset.
+const sessionSecret = process.env.SESSION_SECRET || (isProd ? null : 'dev-only-secret-change-me');
+if (!sessionSecret) {
   throw new Error('SESSION_SECRET must be set in production.');
 }
 
@@ -22,7 +24,7 @@ app.use(
   session({
     name: 'sid',
     store: new PostgresSessionStore(),
-    secret: process.env.SESSION_SECRET ?? 'dev-only-secret-change-me',
+    secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
     // Stay logged in while active: each request pushes expiry another 30 days out.
@@ -40,6 +42,14 @@ app.use('/api/auth', authRouter);
 app.use('/api/clubs', clubsRouter);
 app.use('/api/events', eventsRouter);
 app.use('/api/teams', teamsRouter);
+
+// API errors are JSON, never the SPA's HTML or an HTML stack trace, so the client can show them.
+app.use('/api', (req, res) => res.status(404).json({ error: 'Not found.' }));
+app.use('/api', (err, req, res, next) => {
+  console.error(`${req.method} ${req.originalUrl}:`, err);
+  if (res.headersSent) return next(err);
+  res.status(err.status ?? 500).json({ error: 'Something went wrong on the server. Try again in a moment.' });
+});
 
 // Serve the built React app (client/dist). In development Vite serves it instead.
 const clientDist = path.resolve(import.meta.dirname, '../client/dist');
