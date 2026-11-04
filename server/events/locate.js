@@ -23,9 +23,9 @@ const ALIASES = {
 };
 
 let cache;
-function loadBuildings() {
-  if (cache) return cache;
-  const rows = db.prepare('SELECT code, name, alt_names FROM buildings').all();
+// Run this once before resolveBuilding.
+export async function loadBuildings() {
+  const rows = await db.prepare('SELECT code, name, alt_names FROM buildings').all();
   const codes = new Set(rows.map((r) => r.code));
   // Longest names first so "Engineering 7" wins over "Engineering".
   const names = rows
@@ -33,16 +33,11 @@ function loadBuildings() {
     .filter(([n]) => n.length >= 6)
     .sort((a, b) => b[0].length - a[0].length);
   cache = { codes, names };
-  return cache;
-}
-
-export function resetBuildingCache() {
-  cache = undefined;
 }
 
 // Returns a building code, or null for off-campus / unknown locations.
 export function resolveBuilding(...texts) {
-  const { codes, names } = loadBuildings();
+  const { codes, names } = cache;
   const parts = texts.filter(Boolean).map(String);
   if (!parts.length) return null;
 

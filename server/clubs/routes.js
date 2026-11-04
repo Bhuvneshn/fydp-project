@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { db } from '../db.js';
+import { db, toId } from '../db.js';
 import { requireAuth } from '../auth.js';
 
 export const clubsRouter = Router();
@@ -41,14 +41,14 @@ function toClub(row, { full = false } = {}) {
 }
 
 // The directory is small (~300 clubs), so send it all and filter client-side.
-clubsRouter.get('/', (req, res) => {
-  const rows = db.prepare('SELECT * FROM clubs ORDER BY name COLLATE NOCASE').all();
+clubsRouter.get('/', async (req, res) => {
+  const rows = await db.prepare('SELECT * FROM clubs ORDER BY lower(name) COLLATE "C"').all();
   const lastScrapedAt = rows.reduce((max, r) => (r.scraped_at > max ? r.scraped_at : max), '') || null;
   res.json({ clubs: rows.map((r) => toClub(r)), lastScrapedAt });
 });
 
-clubsRouter.get('/:id', (req, res) => {
-  const row = db.prepare('SELECT * FROM clubs WHERE id = ?').get(Number(req.params.id));
+clubsRouter.get('/:id', async (req, res) => {
+  const row = await db.prepare('SELECT * FROM clubs WHERE id = ?').get(toId(req.params.id));
   if (!row) return res.status(404).json({ error: 'Club not found.' });
   res.json({ club: toClub(row, { full: true }) });
 });

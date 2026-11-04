@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
-import { db } from './db.js';
+import { db, lockUser } from './db.js';
 
 // One-time verification codes sent during registration.
 //
@@ -24,32 +24,38 @@ export async function issueVerificationCode(user) {
   const code = generateCode();
   const codeHash = await bcrypt.hash(code, 10);
 
-  db.prepare('DELETE FROM verification_codes WHERE user_id = ?').run(user.id);
-  db.prepare(
-    'INSERT INTO verification_codes (user_id, code_hash, expires_at) VALUES (?, ?, ?)'
-  ).run(user.id, codeHash, Date.now() + CODE_TTL_MS);
+  await db.transaction(async () => {
+    await lockUser(user.id);
+    await db.prepare('DELETE FROM verification_codes WHERE user_id = ?').run(user.id);
+    await db.prepare(
+      'INSERT INTO verification_codes (user_id, code_hash, expires_at) VALUES (?, ?, ?)'
+    ).run(user.id, codeHash, Date.now() + CODE_TTL_MS);
+  });
 
   await sendVerificationEmail(user.email, code);
 }
 
 // Returns null on success, or an error message.
 export async function checkVerificationCode(userId, code) {
-  const row = db
+  const row = await db
     .prepare('SELECT * FROM verification_codes WHERE user_id = ?')
     .get(userId);
 
   if (!row) return 'No active code. Request a new one.';
   if (Date.now() > row.expires_at) return 'Code expired. Request a new one.';
-  if (row.attempts >= MAX_ATTEMPTS) return 'Too many attempts. Request a new one.';
 
-  db.prepare('UPDATE verification_codes SET attempts = attempts + 1 WHERE id = ?').run(row.id);
+  // Checked and counted in one statement, so parallel guesses can't get past the limit.
+  const { changes } = await db
+    .prepare('UPDATE verification_codes SET attempts = attempts + 1 WHERE id = ? AND attempts < ?')
+    .run(row.id, MAX_ATTEMPTS);
+  if (changes === 0) return 'Too many attempts. Request a new one.';
 
   if (!(await bcrypt.compare(String(code ?? ''), row.code_hash))) {
     return 'Incorrect code.';
   }
 
-  db.prepare('DELETE FROM verification_codes WHERE user_id = ?').run(userId);
-  db.prepare('UPDATE users SET email_verified = 1 WHERE id = ?').run(userId);
+  await db.prepare('DELETE FROM verification_codes WHERE user_id = ?').run(userId);
+  await db.prepare('UPDATE users SET email_verified = 1 WHERE id = ?').run(userId);
   return null;
 }
 

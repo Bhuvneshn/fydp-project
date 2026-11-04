@@ -262,7 +262,7 @@ export default function Events() {
           )}
           {!data && <p className="empty">Loading events…</p>}
           {data && events.length === 0 && (
-            <p className="empty">No events yet. Run <code>npm run import:events</code>, or host one.</p>
+            <p className="empty">No events yet. Host one to get things started.</p>
           )}
           {data && events.length > 0 && rows.length === 0 && <p className="empty">No events match these filters.</p>}
           {days.map((d) => (

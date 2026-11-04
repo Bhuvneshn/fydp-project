@@ -13,7 +13,9 @@ export default function EventDetail() {
 
   useEffect(() => {
     setEvent(null);
-    request(`/api/events/${encodeURIComponent(id)}`).then((d) => setEvent(d.event)).catch((err) => setError(err.message));
+    request(`/api/events/${encodeURIComponent(id)}`)
+      .then((d) => setEvent(d.event))
+      .catch((err) => setError(err.message));
   }, [id]);
 
   if (error) return <p className="error">{error}</p>;

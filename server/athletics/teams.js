@@ -1,6 +1,6 @@
 // Intramural team finder: teams looking for players, and players looking for teams.
 import { Router } from 'express';
-import { db } from '../db.js';
+import { db, lockUser, toId } from '../db.js';
 import { requireAuth } from '../auth.js';
 import { DIVISIONS, INTRAMURAL_SPORTS, SKILL_LEVELS } from './intramurals.js';
 
@@ -41,11 +41,11 @@ function toPost(row, userId, myResponse = null) {
 }
 
 function findPost(id) {
-  return db.prepare(`${POST_SELECT} WHERE p.id = ?`).get(Number(id));
+  return db.prepare(`${POST_SELECT} WHERE p.id = ?`).get(toId(id));
 }
 
-function ownPostOr404(req, res) {
-  const post = findPost(req.params.id);
+async function ownPostOr404(req, res) {
+  const post = await findPost(req.params.id);
   if (!post || post.user_id !== req.session.userId) {
     res.status(404).json({ error: 'Post not found.' });
     return null;
@@ -57,6 +57,8 @@ const cleanText = (v, max) => {
   const s = String(v ?? '').trim();
   return s ? s.slice(0, max) : null;
 };
+const lockPost = db.prepare('SELECT * FROM team_posts WHERE id = ? FOR UPDATE');
+
 const toInt = (v) => (v === '' || v == null ? null : Number.parseInt(v, 10));
 
 // Returns [values, error].
@@ -96,7 +98,7 @@ teamsRouter.get('/options', (req, res) => {
 });
 
 // Open posts, newest first. ?kind=team|player&sport=
-teamsRouter.get('/', (req, res) => {
+teamsRouter.get('/', async (req, res) => {
   const where = ["p.status = 'open'"];
   const args = [];
   if (req.query.kind === 'team' || req.query.kind === 'player') {
@@ -107,25 +109,21 @@ teamsRouter.get('/', (req, res) => {
     where.push('p.sport = ?');
     args.push(String(req.query.sport));
   }
-  const rows = db.prepare(`${POST_SELECT} WHERE ${where.join(' AND ')} ORDER BY p.created_at DESC`).all(...args);
-  const mine = new Map(
-    db
-      .prepare('SELECT post_id, status FROM team_responses WHERE user_id = ?')
-      .all(req.session.userId)
-      .map((r) => [r.post_id, { status: r.status }])
-  );
+  const rows = await db.prepare(`${POST_SELECT} WHERE ${where.join(' AND ')} ORDER BY p.created_at DESC`).all(...args);
+  const responses = await db.prepare('SELECT post_id, status FROM team_responses WHERE user_id = ?').all(req.session.userId);
+  const mine = new Map(responses.map((r) => [r.post_id, { status: r.status }]));
   res.json({ posts: rows.map((r) => toPost(r, req.session.userId, mine.get(r.id) ?? null)) });
 });
 
 // My posts (with who responded) and my requests on other people's posts.
-teamsRouter.get('/mine', (req, res) => {
+teamsRouter.get('/mine', async (req, res) => {
   const userId = req.session.userId;
-  const posts = db.prepare(`${POST_SELECT} WHERE p.user_id = ? ORDER BY p.created_at DESC`).all(userId);
+  const posts = await db.prepare(`${POST_SELECT} WHERE p.user_id = ? ORDER BY p.created_at DESC`).all(userId);
   const responsesFor = db.prepare(
     `SELECT r.*, u.email FROM team_responses r JOIN users u ON u.id = r.user_id
      WHERE r.post_id = ? ORDER BY r.created_at`
   );
-  const myResponses = db
+  const myResponses = await db
     .prepare(
       `SELECT r.id AS response_id, r.status AS response_status, r.message AS response_message,
               r.created_at AS responded_at, p.*, u.email AS author_email, 0 AS pending_count
@@ -135,17 +133,19 @@ teamsRouter.get('/mine', (req, res) => {
     .all(userId);
 
   res.json({
-    posts: posts.map((p) => ({
-      ...toPost(p, userId),
-      responses: responsesFor.all(p.id).map((r) => ({
-        id: r.id,
-        handle: handleOf(r.email),
-        email: r.email,
-        message: r.message,
-        status: r.status,
-        createdAt: r.created_at,
-      })),
-    })),
+    posts: await Promise.all(
+      posts.map(async (p) => ({
+        ...toPost(p, userId),
+        responses: (await responsesFor.all(p.id)).map((r) => ({
+          id: r.id,
+          handle: handleOf(r.email),
+          email: r.email,
+          message: r.message,
+          status: r.status,
+          createdAt: r.created_at,
+        })),
+      }))
+    ),
     requests: myResponses.map((r) => ({
       id: r.response_id,
       status: r.response_status,
@@ -158,64 +158,77 @@ teamsRouter.get('/mine', (req, res) => {
   });
 });
 
-teamsRouter.post('/', (req, res) => {
+teamsRouter.post('/', async (req, res) => {
   const [values, error] = validatePost(req.body);
   if (error) return res.status(400).json({ error });
 
-  const { n } = db
-    .prepare("SELECT COUNT(*) AS n FROM team_posts WHERE user_id = ? AND status = 'open'")
-    .get(req.session.userId);
-  if (n >= MAX_OPEN_POSTS) {
+  const created = await db.transaction(async () => {
+    await lockUser(req.session.userId);
+    const { n } = await db
+      .prepare("SELECT COUNT(*) AS n FROM team_posts WHERE user_id = ? AND status = 'open'")
+      .get(req.session.userId);
+    if (n >= MAX_OPEN_POSTS) return null;
+
+    return db
+      .prepare(
+        `INSERT INTO team_posts (user_id, kind, sport, division, skill, team_name, players_have, team_size, note)
+         VALUES (:user_id, :kind, :sport, :division, :skill, :team_name, :players_have, :team_size, :note)
+         RETURNING id`
+      )
+      .get({ user_id: req.session.userId, ...values });
+  });
+  if (!created) {
     return res.status(400).json({ error: `You can have at most ${MAX_OPEN_POSTS} open posts. Close one first.` });
   }
-
-  const { lastInsertRowid } = db
-    .prepare(
-      `INSERT INTO team_posts (user_id, kind, sport, division, skill, team_name, players_have, team_size, note)
-       VALUES (:user_id, :kind, :sport, :division, :skill, :team_name, :players_have, :team_size, :note)`
-    )
-    .run({ user_id: req.session.userId, ...values });
-  res.status(201).json({ post: toPost(findPost(lastInsertRowid), req.session.userId) });
+  res.status(201).json({ post: toPost(await findPost(created.id), req.session.userId) });
 });
 
 // Owner updates: { status } to close/reopen/mark filled, or { playersHave } as the roster changes.
-teamsRouter.patch('/:id', (req, res) => {
-  const post = ownPostOr404(req, res);
+teamsRouter.patch('/:id', async (req, res) => {
+  const post = await ownPostOr404(req, res);
   if (!post) return;
 
-  let { status, players_have: have } = post;
-  if (req.body.status !== undefined) {
-    if (!['open', 'filled', 'closed'].includes(req.body.status)) return res.status(400).json({ error: 'Invalid status.' });
-    status = req.body.status;
-  }
-  if (req.body.playersHave !== undefined && post.kind === 'team') {
-    have = toInt(req.body.playersHave);
-    if (!Number.isInteger(have) || have < 1 || have > post.team_size) {
-      return res.status(400).json({ error: `Players must be between 1 and ${post.team_size}.` });
-    }
-    if (req.body.status === undefined) status = have >= post.team_size ? 'filled' : 'open';
-  }
+  // Locking the post means this works from the current roster, not one an accept just changed.
+  const err = await db.transaction(async () => {
+    const locked = await lockPost.get(post.id);
+    if (!locked) return [404, 'Post not found.'];
 
-  db.prepare(
-    "UPDATE team_posts SET status = ?, players_have = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE id = ?"
-  ).run(status, have, post.id);
-  res.json({ post: toPost(findPost(post.id), req.session.userId) });
+    let { status, players_have: have } = locked;
+    if (req.body.status !== undefined) {
+      if (!['open', 'filled', 'closed'].includes(req.body.status)) return [400, 'Invalid status.'];
+      status = req.body.status;
+    }
+    if (req.body.playersHave !== undefined && locked.kind === 'team') {
+      have = toInt(req.body.playersHave);
+      if (!Number.isInteger(have) || have < 1 || have > locked.team_size) {
+        return [400, `Players must be between 1 and ${locked.team_size}.`];
+      }
+      if (req.body.status === undefined) status = have >= locked.team_size ? 'filled' : 'open';
+    }
+
+    await db
+      .prepare('UPDATE team_posts SET status = ?, players_have = ?, updated_at = now_iso() WHERE id = ?')
+      .run(status, have, post.id);
+    return null;
+  });
+  if (err) return res.status(err[0]).json({ error: err[1] });
+  res.json({ post: toPost(await findPost(post.id), req.session.userId) });
 });
 
-teamsRouter.delete('/:id', (req, res) => {
-  const post = ownPostOr404(req, res);
+teamsRouter.delete('/:id', async (req, res) => {
+  const post = await ownPostOr404(req, res);
   if (!post) return;
-  db.prepare('DELETE FROM team_posts WHERE id = ?').run(post.id);
+  await db.prepare('DELETE FROM team_posts WHERE id = ?').run(post.id);
   res.json({ ok: true });
 });
 
 // "I'm in" on someone else's open post.
-teamsRouter.post('/:id/responses', (req, res) => {
-  const post = findPost(req.params.id);
+teamsRouter.post('/:id/responses', async (req, res) => {
+  const post = await findPost(req.params.id);
   if (!post || post.status !== 'open') return res.status(404).json({ error: 'This post is no longer open.' });
   if (post.user_id === req.session.userId) return res.status(400).json({ error: "You can't respond to your own post." });
 
-  const result = db
+  const result = await db
     .prepare('INSERT INTO team_responses (post_id, user_id, message) VALUES (?, ?, ?) ON CONFLICT DO NOTHING')
     .run(post.id, req.session.userId, cleanText(req.body.message, 300));
   if (result.changes === 0) return res.status(409).json({ error: "You've already responded to this post." });
@@ -223,40 +236,41 @@ teamsRouter.post('/:id/responses', (req, res) => {
 });
 
 // Withdraw my pending request.
-teamsRouter.delete('/:id/responses', (req, res) => {
-  const { changes } = db
+teamsRouter.delete('/:id/responses', async (req, res) => {
+  const { changes } = await db
     .prepare("DELETE FROM team_responses WHERE post_id = ? AND user_id = ? AND status = 'pending'")
-    .run(Number(req.params.id), req.session.userId);
+    .run(toId(req.params.id), req.session.userId);
   if (changes === 0) return res.status(404).json({ error: 'No pending request to withdraw.' });
   res.json({ ok: true });
 });
 
 // Owner accepts or declines a pending request. Accepting a player fills a spot on the team.
-teamsRouter.patch('/:id/responses/:responseId', (req, res) => {
-  const post = ownPostOr404(req, res);
+teamsRouter.patch('/:id/responses/:responseId', async (req, res) => {
+  const post = await ownPostOr404(req, res);
   if (!post) return;
   const status = req.body.status;
   if (!['accepted', 'declined'].includes(status)) return res.status(400).json({ error: 'Invalid status.' });
 
-  const response = db
-    .prepare('SELECT * FROM team_responses WHERE id = ? AND post_id = ?')
-    .get(Number(req.params.responseId), post.id);
-  if (!response) return res.status(404).json({ error: 'Request not found.' });
-  if (response.status !== 'pending') return res.status(400).json({ error: `Already ${response.status}.` });
+  // Locking the post stops two accepts counting the same open spot, and locking the request
+  // stops the player withdrawing it while it's being accepted.
+  const err = await db.transaction(async () => {
+    const locked = await lockPost.get(post.id);
+    if (!locked) return [404, 'Post not found.'];
+    const response = await db
+      .prepare('SELECT * FROM team_responses WHERE id = ? AND post_id = ? FOR UPDATE')
+      .get(toId(req.params.responseId), post.id);
+    if (!response) return [404, 'Request not found.'];
+    if (response.status !== 'pending') return [400, `Already ${response.status}.`];
 
-  db.exec('BEGIN');
-  try {
-    db.prepare('UPDATE team_responses SET status = ? WHERE id = ?').run(status, response.id);
-    if (status === 'accepted' && post.kind === 'team') {
-      const have = Math.min(post.players_have + 1, post.team_size);
-      db.prepare(
-        "UPDATE team_posts SET players_have = ?, status = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE id = ?"
-      ).run(have, have >= post.team_size ? 'filled' : post.status, post.id);
+    await db.prepare('UPDATE team_responses SET status = ? WHERE id = ?').run(status, response.id);
+    if (status === 'accepted' && locked.kind === 'team') {
+      const have = Math.min(locked.players_have + 1, locked.team_size);
+      await db
+        .prepare('UPDATE team_posts SET players_have = ?, status = ?, updated_at = now_iso() WHERE id = ?')
+        .run(have, have >= locked.team_size ? 'filled' : locked.status, post.id);
     }
-    db.exec('COMMIT');
-  } catch (err) {
-    db.exec('ROLLBACK');
-    throw err;
-  }
-  res.json({ post: toPost(findPost(post.id), req.session.userId) });
+    return null;
+  });
+  if (err) return res.status(err[0]).json({ error: err[1] });
+  res.json({ post: toPost(await findPost(post.id), req.session.userId) });
 });

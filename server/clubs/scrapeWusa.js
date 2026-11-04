@@ -74,7 +74,7 @@ const COLUMNS = Object.keys(toRow({ socials: [], categories: [], associated_club
 const upsert = db.prepare(`
   INSERT INTO clubs (${COLUMNS.join(', ')})
   VALUES (${COLUMNS.map((c) => `:${c}`).join(', ')})
-  ON CONFLICT(id) DO UPDATE SET
+  ON CONFLICT (id) DO UPDATE SET
     ${COLUMNS.filter((c) => c !== 'id').map((c) => `${c} = excluded.${c}`).join(',\n    ')}
 `);
 
@@ -94,7 +94,7 @@ async function main() {
   const failed = [];
   await mapConcurrent(ids, CONCURRENCY, async (id) => {
     try {
-      upsert.run(toRow(await getJson(`${API}/clubs/${id}/profile`)));
+      await upsert.run(toRow(await getJson(`${API}/clubs/${id}/profile`)));
     } catch (err) {
       failed.push(`${id}: ${err.message}`);
     }
@@ -102,8 +102,7 @@ async function main() {
   });
 
   // Drop clubs that no longer appear in the directory.
-  const placeholders = ids.map(() => '?').join(',');
-  const { changes } = db.prepare(`DELETE FROM clubs WHERE id NOT IN (${placeholders})`).run(...ids);
+  const { changes } = await db.prepare('DELETE FROM clubs WHERE id <> ALL(?::int[])').run(ids);
 
   console.log(`Saved ${ids.length - failed.length} clubs, removed ${changes} stale.`);
   if (failed.length) console.warn(`Failed (${failed.length}):\n  ${failed.join('\n  ')}`);
