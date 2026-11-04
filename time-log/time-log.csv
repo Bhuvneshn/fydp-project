@@ -113,6 +113,7 @@ date,date_is_approx,person,hours,hours_is_estimate,category,activity
 2026-11-03,yes,Geoffrey,2.50,yes,testing,Manual test of the main flows
 2026-11-03,yes,Koral,1.00,yes,admin,MP2 time and process slide (issue #17)
 2026-11-04,no,Arjun,1.25,yes,coding,"Supabase student-run events, event page, schema and demo data on PR #40"
+2026-11-04,no,Arjun,0.50,yes,admin,Updated the time log from the repo history
 2026-11-04,no,Aum,0.50,yes,testing,Went through the review of PR #40 and replied
 2026-11-04,yes,Geoffrey,2.00,yes,testing,Checked pages on phones and other browsers
 2026-11-04,yes,Koral,1.50,yes,testing,Regression pass before the review
