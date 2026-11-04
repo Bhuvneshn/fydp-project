@@ -52,7 +52,7 @@ export default function Clubs() {
   const tabNote = TABS.find((t) => t.value === filters.tab)?.note;
   const activeFilterCount =
     filters.categories.length + filters.socials.length +
-    [filters.q, filters.term, filters.minMembers, filters.from, filters.to, filters.meeting].filter(Boolean).length;
+    [filters.q, filters.minMembers, filters.from, filters.to, filters.meeting].filter(Boolean).length;
 
   return (
     <>
@@ -106,15 +106,6 @@ export default function Clubs() {
                 {c}
               </label>
             ))}
-          </div>
-
-          <div>
-            <h3>WUSA status</h3>
-            <select className="select" aria-label="WUSA status" value={filters.term} onChange={(e) => setParam('term', e.target.value)}>
-              <option value="">Any</option>
-              <option value="yes">Ratified this term</option>
-              <option value="no">Not ratified this term</option>
-            </select>
           </div>
 
           <div>
@@ -185,14 +176,13 @@ function ClubCard({ club }) {
       </div>
       {club.tagline && <p className="tagline">{club.tagline}</p>}
       <div className="meta">
-        <StatusBadge instagram={club.instagram} />
+        <StatusBadge status={club.status} />
         {club.categories.slice(0, 1).map((c) => <span key={c} className="tag">{c}</span>)}
         {club.categories.length > 1 && <span className="tag">+{club.categories.length - 1}</span>}
         <span className="card-meta">
           {[
             club.memberCount > 0 && `${club.memberCount} members`,
             club.yearStarted && `since ${club.yearStarted}`,
-            club.instagram.lastPostAt && `IG ${formatDate(club.instagram.lastPostAt)}`,
           ].filter(Boolean).join(' · ')}
         </span>
       </div>

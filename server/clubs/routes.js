@@ -5,29 +5,6 @@ import { requireAuth } from '../auth.js';
 export const clubsRouter = Router();
 clubsRouter.use(requireAuth);
 
-const ACTIVE_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
-
-// Computed per request so the 30-day window is always relative to now.
-function instagramActivity(club) {
-  if (!club.instagram_handle) {
-    return { status: 'inactive', reason: 'No Instagram linked' };
-  }
-  if (club.ig_last_post_at) {
-    const active = Date.now() - Date.parse(club.ig_last_post_at) <= ACTIVE_WINDOW_MS;
-    return {
-      status: active ? 'active' : 'inactive',
-      reason: active ? 'Posted on Instagram in the last month' : 'No Instagram post in the last month',
-    };
-  }
-  if (club.ig_check_error === 'No posts') {
-    return { status: 'inactive', reason: 'No Instagram posts' };
-  }
-  return {
-    status: 'unknown',
-    reason: club.ig_check_error ?? 'Instagram not checked yet',
-  };
-}
-
 function toClub(row, { full = false } = {}) {
   const club = {
     id: row.id,
@@ -39,19 +16,14 @@ function toClub(row, { full = false } = {}) {
     memberCount: row.member_count,
     executiveCount: row.executive_count,
     logoUrl: row.logo_url,
-    wusaActiveThisTerm: Boolean(row.wusa_active_this_term),
+    // Active = listed as active for the current term on clubs.wusa.ca.
+    status: row.wusa_active_this_term ? 'active' : 'inactive',
     currentTermName: row.current_term_name,
     categories: JSON.parse(row.categories),
     socials: JSON.parse(row.socials),
     hasMeetingInfo: Boolean(row.membership_and_meeting),
     hasEmail: Boolean(row.email),
     wusaLastUpdated: row.wusa_last_updated,
-    instagram: {
-      handle: row.instagram_handle,
-      lastPostAt: row.ig_last_post_at,
-      checkedAt: row.ig_checked_at,
-      ...instagramActivity(row),
-    },
   };
   if (full) {
     Object.assign(club, {
