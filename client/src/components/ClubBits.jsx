@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
-const STATUS_LABEL = { active: 'Active', inactive: 'Inactive', unknown: 'Not checked' };
-const STATUS_CLASS = { active: 'tag positive', inactive: 'tag', unknown: 'tag outline' };
+const STATUS_LABEL = { active: 'Active', inactive: 'Inactive' };
+const STATUS_CLASS = { active: 'tag positive', inactive: 'tag' };
 
 export function ClubLogo({ club, large = false }) {
   const [failed, setFailed] = useState(false);
@@ -12,12 +12,8 @@ export function ClubLogo({ club, large = false }) {
   return <div className={className} aria-hidden="true">{(club.acronym || club.name).slice(0, 2).toUpperCase()}</div>;
 }
 
-export function StatusBadge({ instagram }) {
-  return (
-    <span className={STATUS_CLASS[instagram.status]} title={instagram.reason}>
-      {STATUS_LABEL[instagram.status]}
-    </span>
-  );
+export function StatusBadge({ status }) {
+  return <span className={STATUS_CLASS[status]}>{STATUS_LABEL[status]}</span>;
 }
 
 export function formatDate(iso) {

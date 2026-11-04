@@ -19,7 +19,6 @@ server/            Express API
   validation.js    @uwaterloo.ca check
   clubs/
     scrapeWusa.js  Imports clubs from clubs.wusa.ca
-    instagram.js   Checks each club's latest Instagram post
     routes.js      /api/clubs
   events/
     importBuildings.js  Campus building codes + coordinates (UW map API)
@@ -37,7 +36,7 @@ server/            Express API
 
 ```bash
 npm install            # also installs client/ deps
-cp .env.example .env   # optional for local dev
+cp .env.example .env   # set DATABASE_URL, then run npm run db:setup
 npm run dev            # API on :3000, React (Vite) on :5173
 ```
 
@@ -51,13 +50,13 @@ Re-run `npm run import:events` daily (e.g. cron) to keep events fresh.
 
 Open http://localhost:5173. Vite proxies `/api` to the Express server.
 
-All data lives in Postgres. Set `DATABASE_URL` in `.env`, then run `npm run db:setup` to create the tables and add the demo events (`supabase/schema.sql` and `supabase/seed.sql`). It's safe to run again. Only the server talks to the database, so the client needs no Supabase keys. `npm run db:copy-sqlite` copies an old `data/app.db` across once, without accounts unless you add `-- --with-users`.
+All data lives in Postgres. Set `DATABASE_URL` in `.env`, then run `npm run db:setup` to create the tables and add the demo events (`supabase/schema.sql` and `supabase/seed.sql`). It's safe to run again. Only the server talks to the database, so the client needs no Supabase keys.
 
 For production: `npm run build && npm start`, then Express serves the built React app and the API together on http://localhost:3000.
 
 ## Clubs directory
 
-`/clubs` lists every club from the [WUSA clubs directory](https://clubs.wusa.ca/find-a-club), with search, filters (category, WUSA ratification this term, member count, year founded, which links a club has, meeting info) and sorting. Filters live in the URL, so filtered views can be shared. `/clubs/:id` shows a club's full profile.
+`/clubs` lists every club from the [WUSA clubs directory](https://clubs.wusa.ca/find-a-club), with search, filters (category, member count, year founded, which links a club has, meeting info) and sorting. Filters live in the URL, so filtered views can be shared. `/clubs/:id` shows a club's full profile.
 
 ### Data source
 
@@ -65,23 +64,7 @@ For production: `npm run build && npm start`, then Express serves the built Reac
 
 ### Active / Inactive
 
-Clubs are classified by Instagram activity (computed at request time, so the window is always relative to today):
-
-| Tab          | Rule                                                                               |
-|--------------|------------------------------------------------------------------------------------|
-| Active       | Instagram linked on WUSA **and** latest post within the last 30 days              |
-| Inactive     | No Instagram linked, **or** latest post older than 30 days, **or** no posts       |
-| Not checked  | Instagram linked but we couldn't read it (not checked yet, personal/private account) |
-
-Instagram blocks anonymous scraping, so `npm run check:instagram` uses the official **Instagram Graph API Business Discovery** endpoint. Setup:
-
-1. Convert an Instagram account you control to a **Business or Creator** account and link it to a Facebook Page.
-2. Create a Meta app at developers.facebook.com and add the Instagram Graph API product.
-3. Generate a long-lived access token with `instagram_basic` and `pages_show_list` (plus `business_management` if needed).
-4. Put `IG_ACCESS_TOKEN` and `IG_BUSINESS_ACCOUNT_ID` (your Instagram account's user id) in `.env`.
-5. Run `npm run check:instagram`. It throttles to about 200 calls/hour (`IG_REQUEST_DELAY_MS`), skips accounts checked in the last 24h (`-- --force` to recheck all), and stops cleanly on rate limits so you can re-run it.
-
-Business Discovery can only see Business/Creator accounts; clubs using personal accounts show up under **Not checked**.
+A club is **Active** if WUSA lists it as active for the current term (the same split as the Active/Inactive lists on clubs.wusa.ca), and **Inactive** otherwise. Re-run `npm run scrape:clubs` at the start of each term to pick up changes.
 
 ## Events map
 
@@ -136,7 +119,7 @@ It is enforced server-side on both `/api/auth/register` and `/api/auth/login`; t
 | GET    | `/api/auth/me`           | Current user                                 |
 | POST   | `/api/auth/verify`       | `{ code }` — confirm the emailed one-time code |
 | POST   | `/api/auth/resend-code`  | Issue a new one-time code                    |
-| GET    | `/api/clubs`             | All clubs with Instagram status (login required) |
+| GET    | `/api/clubs`             | All clubs with active/inactive status (login required) |
 | GET    | `/api/clubs/:id`         | Full club profile (login required)           |
 | GET    | `/api/events`            | Upcoming on-campus events with building coordinates (`?days=60`) |
 | GET    | `/api/events/:id`        | Event detail with guest list                 |

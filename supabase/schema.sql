@@ -57,12 +57,7 @@ CREATE TABLE IF NOT EXISTS clubs (
   associated_clubs       TEXT NOT NULL DEFAULT '[]',
   gallery                TEXT NOT NULL DEFAULT '[]',
   wusa_last_updated      TEXT,
-  scraped_at             TEXT NOT NULL,
-  -- Instagram activity (see server/clubs/instagram.js)
-  instagram_handle       TEXT,
-  ig_last_post_at        TEXT,
-  ig_checked_at          TEXT COLLATE "C",
-  ig_check_error         TEXT
+  scraped_at             TEXT NOT NULL
 );
 
 -- Campus buildings from UW's map API (see server/events/importBuildings.js).

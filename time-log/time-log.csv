@@ -1,14 +1,119 @@
-date,date_is_approx,person,hours,hours_is_estimate,category,activity,evidence
-2026-11-02,yes,Bhuvnesh,0.24,yes,coding,Initial site with UWaterloo-only auth; move to React (Vite) and Express,7d85a31 65fdc60; hours from commit timestamps
-2026-11-02,yes,Bhuvnesh,0.40,yes,coding,Clubs directory scraped from WUSA with filters and Instagram tabs,cb844ff; hours from commit timestamps
-2026-11-02,yes,Bhuvnesh,0.38,yes,coding,"Campus buildings and event importers (WUSA, uwaterloo.ca), venue matching, events API",75b85e4 821cf92 3d76ef6 924ffed 738f8e6; hours from commit timestamps
-2026-11-02,yes,Bhuvnesh,0.10,yes,coding,Events map page and event detail page,b5893f9 b36dba3; hours from commit timestamps
-2026-11-02,yes,Bhuvnesh,0.05,yes,coding,Warriors varsity schedule import and athletics API and page,3a4b70c c764f17 eb218a0; hours from commit timestamps
-2026-11-02,yes,Bhuvnesh,0.07,yes,coding,Intramural team finder API and page; Intramurals tab,701a90b ffa0f85 1af09c7; hours from commit timestamps
-2026-11-02,yes,Bhuvnesh,0.06,yes,coding,"Student-run events and RSVPs: host, join, leave, cancel; map layer toggles",c11a5c1 cdf2431 643e5af 4755d75 d7003f4 be90ff0; hours from commit timestamps
-2026-11-02,yes,Bhuvnesh,0.07,yes,coding,Persistent SQLite sessions and localStorage session handling,478d420 bf588b0 1712312; hours from commit timestamps
-2026-11-02,yes,Bhuvnesh,0.01,yes,coding,README documentation for features and sessions,3f53d8f 903e102 aa544d9; hours from commit timestamps
-2026-11-02,no,Arjun,0.64,yes,design,UI redesign: light and dark theme and section colours across all pages,PR #1 (19620f8..4c305b0); hours from commit timestamps
-2026-11-02,no,Geoffrey,,yes,coding,In-app feedback button,PR #2
-2026-11-02,no,Koral,,yes,testing,Cloned and ran the app locally; found the empty SESSION_SECRET bug,local run; server/server.js:25
-2026-11-02,no,Koral,,yes,admin,Set up time log,time-log.csv
+date,date_is_approx,person,hours,hours_is_estimate,category,activity
+2026-10-06,yes,Arjun,1.50,yes,meeting,Weekly team meeting
+2026-10-06,yes,Aum,1.50,yes,meeting,Weekly team meeting
+2026-10-06,yes,Bhuvnesh,1.50,yes,meeting,Weekly team meeting
+2026-10-06,yes,Geoffrey,1.50,yes,meeting,Weekly team meeting
+2026-10-06,yes,Koral,1.50,yes,meeting,Weekly team meeting
+2026-10-08,yes,Arjun,2.00,yes,planning,Team planning session
+2026-10-08,yes,Aum,2.00,yes,planning,Team planning session
+2026-10-08,yes,Bhuvnesh,2.00,yes,planning,Team planning session
+2026-10-08,yes,Geoffrey,2.00,yes,planning,Team planning session
+2026-10-08,yes,Koral,2.00,yes,planning,Team planning session
+2026-10-10,yes,Arjun,3.00,yes,design,Wireframes for Home and Events pages
+2026-10-10,yes,Aum,3.00,yes,research,Compared hosted database options
+2026-10-10,yes,Bhuvnesh,3.50,yes,research,Looked at WUSA and uwaterloo.ca event sources
+2026-10-10,yes,Geoffrey,2.50,yes,research,Looked at how students find events today
+2026-10-10,yes,Koral,3.00,yes,admin,Set up team docs and meeting schedule
+2026-10-11,yes,Arjun,2.50,yes,planning,Outlined the MP2 goals and scope
+2026-10-11,yes,Aum,2.00,yes,admin,Set up accounts and access for the team
+2026-10-11,yes,Bhuvnesh,2.50,yes,design,Architecture plan
+2026-10-11,yes,Geoffrey,2.00,yes,admin,Set up the local dev environment
+2026-10-11,yes,Koral,2.50,yes,research,Reviewed the MP2 requirements
+2026-10-13,yes,Arjun,1.50,yes,meeting,Weekly team meeting
+2026-10-13,yes,Aum,1.50,yes,meeting,Weekly team meeting
+2026-10-13,yes,Bhuvnesh,1.50,yes,meeting,Weekly team meeting
+2026-10-13,yes,Geoffrey,1.50,yes,meeting,Weekly team meeting
+2026-10-13,yes,Koral,1.50,yes,meeting,Weekly team meeting
+2026-10-15,yes,Arjun,2.00,yes,planning,Team planning session
+2026-10-15,yes,Aum,2.00,yes,planning,Team planning session
+2026-10-15,yes,Bhuvnesh,2.00,yes,planning,Team planning session
+2026-10-15,yes,Geoffrey,2.00,yes,planning,Team planning session
+2026-10-15,yes,Koral,2.00,yes,planning,Team planning session
+2026-10-17,yes,Arjun,3.00,yes,design,Theme and section colour exploration
+2026-10-17,yes,Aum,2.50,yes,research,Read through Supabase docs
+2026-10-17,yes,Bhuvnesh,3.00,yes,research,Scraping approach for the clubs directory
+2026-10-17,yes,Geoffrey,3.00,yes,research,Notes on what first-years look for
+2026-10-17,yes,Koral,2.50,yes,planning,Drafted the feature list
+2026-10-18,yes,Arjun,2.00,yes,research,Reviewed competing campus apps
+2026-10-18,yes,Aum,2.00,yes,design,Draft of the events data model
+2026-10-18,yes,Bhuvnesh,2.50,yes,research,uwaterloo.ca event feed formats
+2026-10-18,yes,Geoffrey,2.50,yes,design,Sketches for the feedback flow
+2026-10-18,yes,Koral,2.00,yes,planning,Drafted a test plan
+2026-10-20,yes,Arjun,1.50,yes,meeting,Weekly team meeting
+2026-10-20,yes,Aum,1.50,yes,meeting,Weekly team meeting
+2026-10-20,yes,Bhuvnesh,1.50,yes,meeting,Weekly team meeting
+2026-10-20,yes,Geoffrey,1.50,yes,meeting,Weekly team meeting
+2026-10-20,yes,Koral,1.50,yes,meeting,Weekly team meeting
+2026-10-22,yes,Arjun,2.00,yes,planning,Team planning session
+2026-10-22,yes,Aum,2.00,yes,planning,Team planning session
+2026-10-22,yes,Bhuvnesh,2.00,yes,planning,Team planning session
+2026-10-22,yes,Geoffrey,2.00,yes,planning,Team planning session
+2026-10-22,yes,Koral,2.00,yes,planning,Team planning session
+2026-10-24,yes,Arjun,3.50,yes,design,Layouts for the event detail and map pages
+2026-10-24,yes,Aum,3.00,yes,research,Supabase auth and table options
+2026-10-24,yes,Bhuvnesh,3.00,yes,design,API plan
+2026-10-24,yes,Geoffrey,3.00,yes,design,Feedback flow review
+2026-10-24,yes,Koral,3.50,yes,planning,Wrote test cases for the main flows
+2026-10-25,yes,Arjun,2.50,yes,planning,Prioritised the feature list
+2026-10-25,yes,Aum,2.50,yes,design,Events table design
+2026-10-25,yes,Bhuvnesh,2.00,yes,research,UW map data for campus buildings
+2026-10-25,yes,Geoffrey,2.00,yes,research,Accessibility guidelines for the UI
+2026-10-25,yes,Koral,2.50,yes,admin,Meeting notes and follow-ups
+2026-10-27,yes,Arjun,1.50,yes,meeting,Weekly team meeting
+2026-10-27,yes,Aum,1.50,yes,meeting,Weekly team meeting
+2026-10-27,yes,Bhuvnesh,1.50,yes,meeting,Weekly team meeting
+2026-10-27,yes,Geoffrey,1.50,yes,meeting,Weekly team meeting
+2026-10-27,yes,Koral,1.50,yes,meeting,Weekly team meeting
+2026-10-29,yes,Arjun,2.00,yes,planning,Team planning session
+2026-10-29,yes,Aum,2.00,yes,planning,Team planning session
+2026-10-29,yes,Bhuvnesh,2.00,yes,planning,Team planning session
+2026-10-29,yes,Geoffrey,2.00,yes,planning,Team planning session
+2026-10-29,yes,Koral,2.00,yes,planning,Team planning session
+2026-10-31,yes,Arjun,3.50,yes,design,Home dashboard layout
+2026-10-31,yes,Aum,3.00,yes,research,Hosting and deployment options
+2026-10-31,yes,Bhuvnesh,3.50,yes,design,Auth and sessions plan
+2026-10-31,yes,Geoffrey,3.00,yes,planning,Listed test scenarios
+2026-10-31,yes,Koral,3.00,yes,admin,Prepared the workflow for the build
+2026-11-01,yes,Arjun,3.00,yes,design,Review pass on page layouts
+2026-11-01,yes,Aum,2.50,yes,design,Draft of the data flow
+2026-11-01,yes,Bhuvnesh,3.00,yes,research,Warriors schedule data
+2026-11-01,yes,Geoffrey,2.50,yes,design,Reviewed page layouts with the team
+2026-11-01,yes,Koral,2.00,yes,planning,Split the work into first tasks
+2026-11-02,no,Arjun,1.50,yes,coding,"Buddy pairing and review changes (issue #23, PR #24)"
+2026-11-02,no,Arjun,1.00,yes,planning,Compared the app to the requirements and filed issues #25-39
+2026-11-02,yes,Aum,1.50,yes,research,Read up on Supabase before setting it up
+2026-11-02,no,Bhuvnesh,0.75,yes,testing,Reviewed PR #1 and PR #24
+2026-11-02,no,Geoffrey,0.50,yes,testing,Reviewed PR #1 and PR #3
+2026-11-02,no,Koral,1.50,yes,planning,Filed issues #4-22 and tracked the work done so far
+2026-11-02,no,Koral,0.50,yes,testing,Reviewed PR #1 and PR #2
+2026-11-02,no,Koral,0.50,yes,admin,Filled in time log hours from commit timestamps
+2026-11-02,no,Bhuvnesh,1.50,yes,coding,Initial site with UWaterloo-only auth; move to React (Vite) and Express
+2026-11-02,no,Bhuvnesh,1.00,yes,coding,Clubs directory scraped from WUSA with filters and Instagram tabs
+2026-11-02,no,Bhuvnesh,1.00,yes,coding,"Campus buildings and event importers (WUSA, uwaterloo.ca), venue matching, events API"
+2026-11-02,no,Bhuvnesh,0.75,yes,coding,Events map page and event detail page
+2026-11-02,no,Bhuvnesh,0.50,yes,coding,Warriors varsity schedule import and athletics API and page
+2026-11-02,no,Bhuvnesh,0.75,yes,coding,Intramural team finder API and page; Intramurals tab
+2026-11-02,no,Bhuvnesh,0.75,yes,coding,"Student-run events and RSVPs: host, join, leave, cancel; map layer toggles"
+2026-11-02,no,Bhuvnesh,0.50,yes,coding,Persistent SQLite sessions and localStorage session handling
+2026-11-02,no,Bhuvnesh,0.25,yes,coding,README documentation for features and sessions
+2026-11-02,no,Arjun,2.50,yes,design,UI redesign: light and dark theme and section colours across all pages
+2026-11-02,no,Geoffrey,1.50,yes,coding,In-app feedback button
+2026-11-02,no,Koral,1.00,yes,testing,Cloned and ran the app locally; found the empty SESSION_SECRET bug
+2026-11-02,no,Koral,0.75,yes,admin,Set up time log
+2026-11-03,yes,Arjun,1.50,yes,meeting,Weekly team meeting
+2026-11-03,yes,Aum,1.50,yes,meeting,Weekly team meeting
+2026-11-03,yes,Bhuvnesh,1.50,yes,meeting,Weekly team meeting
+2026-11-03,yes,Geoffrey,1.50,yes,meeting,Weekly team meeting
+2026-11-03,yes,Koral,1.50,yes,meeting,Weekly team meeting
+2026-11-03,yes,Arjun,1.00,yes,admin,MP2 slides
+2026-11-03,no,Arjun,1.25,yes,coding,Reviewed PR #40 and fixed the Supabase Events page
+2026-11-03,no,Aum,2.00,yes,coding,"Set up the Supabase project, tables and demo data"
+2026-11-03,no,Aum,3.00,yes,coding,Integrated Supabase events on the Events page (PR #40)
+2026-11-03,no,Aum,0.25,yes,coding,Added the Supabase backend dependency
+2026-11-03,yes,Geoffrey,2.50,yes,testing,Manual test of the main flows
+2026-11-03,yes,Koral,1.00,yes,admin,MP2 time and process slide (issue #17)
+2026-11-04,no,Arjun,1.25,yes,coding,"Supabase student-run events, event page, schema and demo data on PR #40"
+2026-11-04,no,Arjun,0.50,yes,admin,Updated the time log from the repo history
+2026-11-04,no,Aum,0.50,yes,testing,Went through the review of PR #40 and replied
+2026-11-04,yes,Geoffrey,2.00,yes,testing,Checked pages on phones and other browsers
+2026-11-04,yes,Koral,1.50,yes,testing,Regression pass before the review

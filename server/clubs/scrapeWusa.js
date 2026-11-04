@@ -42,7 +42,6 @@ function toRow(p) {
     url: s.url,
     handle: s.handle,
   }));
-  const instagram = socials.find((s) => s.type === 'instagram');
 
   return {
     id: p.id,
@@ -68,20 +67,15 @@ function toRow(p) {
     gallery: JSON.stringify(p.gallery.map((g) => absoluteUrl(g.url))),
     wusa_last_updated: p.last_updated || null,
     scraped_at: new Date().toISOString(),
-    instagram_handle: instagram?.handle?.replace(/^@/, '').toLowerCase() || null,
   };
 }
 
 const COLUMNS = Object.keys(toRow({ socials: [], categories: [], associated_clubs: [], gallery: [], name: '' }));
-// Upsert, keeping previously fetched Instagram activity unless the handle changed.
 const upsert = db.prepare(`
   INSERT INTO clubs (${COLUMNS.join(', ')})
   VALUES (${COLUMNS.map((c) => `:${c}`).join(', ')})
-  ON CONFLICT(id) DO UPDATE SET
-    ${COLUMNS.filter((c) => c !== 'id').map((c) => `${c} = excluded.${c}`).join(',\n    ')},
-    ig_last_post_at = CASE WHEN clubs.instagram_handle IS NOT DISTINCT FROM excluded.instagram_handle THEN clubs.ig_last_post_at END,
-    ig_checked_at   = CASE WHEN clubs.instagram_handle IS NOT DISTINCT FROM excluded.instagram_handle THEN clubs.ig_checked_at END,
-    ig_check_error  = CASE WHEN clubs.instagram_handle IS NOT DISTINCT FROM excluded.instagram_handle THEN clubs.ig_check_error END
+  ON CONFLICT (id) DO UPDATE SET
+    ${COLUMNS.filter((c) => c !== 'id').map((c) => `${c} = excluded.${c}`).join(',\n    ')}
 `);
 
 async function mapConcurrent(items, limit, fn) {

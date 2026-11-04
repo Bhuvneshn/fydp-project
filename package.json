@@ -10,9 +10,7 @@
     "dev:client": "npm --prefix client run dev",
     "build": "npm --prefix client run build",
     "db:setup": "node --env-file-if-exists=.env server/scripts/setupDatabase.js",
-    "db:copy-sqlite": "node --env-file-if-exists=.env server/scripts/copyFromSqlite.js",
     "scrape:clubs": "node --env-file-if-exists=.env server/clubs/scrapeWusa.js",
-    "check:instagram": "node --env-file-if-exists=.env server/clubs/instagram.js",
     "import:buildings": "node --env-file-if-exists=.env server/events/importBuildings.js",
     "import:events": "node --env-file-if-exists=.env server/events/importEvents.js",
     "import:all": "npm run scrape:clubs && npm run import:events"

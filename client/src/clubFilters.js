@@ -1,9 +1,8 @@
 // Club directory filtering. Filter state lives in the URL query string so views are shareable.
 
 export const TABS = [
-  { value: 'active', label: 'Active', note: 'Posted on Instagram within the last month.' },
-  { value: 'inactive', label: 'Inactive', note: 'No Instagram linked, or no Instagram post in the last month.' },
-  { value: 'unknown', label: 'Not checked', note: "Instagram is linked but we couldn't read its latest post (not checked yet, or a personal/private account)." },
+  { value: 'active', label: 'Active', note: 'Active this term on clubs.wusa.ca.' },
+  { value: 'inactive', label: 'Inactive', note: 'Not active this term on clubs.wusa.ca.' },
   { value: 'all', label: 'All' },
 ];
 
@@ -20,7 +19,6 @@ export const SORTS = [
   { value: 'members', label: 'Most members' },
   { value: 'newest', label: 'Newest founded' },
   { value: 'oldest', label: 'Oldest founded' },
-  { value: 'instagram', label: 'Latest Instagram post' },
   { value: 'updated', label: 'Recently updated on WUSA' },
 ];
 
@@ -30,7 +28,6 @@ export function readFilters(params) {
     q: params.get('q') ?? '',
     categories: params.getAll('cat'),
     socials: params.getAll('social'),
-    term: params.get('term') ?? '',
     minMembers: params.get('members') ?? '',
     from: params.get('from') ?? '',
     to: params.get('to') ?? '',
@@ -45,8 +42,6 @@ function matchesFilters(club, f) {
   if (q && ![club.name, club.acronym, club.tagline].some((s) => s?.toLowerCase().includes(q))) return false;
   if (f.categories.length && !f.categories.some((c) => club.categories.includes(c))) return false;
   if (f.socials.length && !f.socials.every((t) => club.socials.some((s) => s.type === t))) return false;
-  if (f.term === 'yes' && !club.wusaActiveThisTerm) return false;
-  if (f.term === 'no' && club.wusaActiveThisTerm) return false;
   if (f.minMembers && (club.memberCount ?? 0) < Number(f.minMembers)) return false;
   if (f.from && (club.yearStarted ?? 0) < Number(f.from)) return false;
   if (f.to && (club.yearStarted ?? Infinity) > Number(f.to)) return false;
@@ -60,16 +55,15 @@ const COMPARATORS = {
   members: (a, b) => (b.memberCount ?? 0) - (a.memberCount ?? 0),
   newest: (a, b) => (b.yearStarted ?? 0) - (a.yearStarted ?? 0),
   oldest: (a, b) => (a.yearStarted ?? 9999) - (b.yearStarted ?? 9999),
-  instagram: (a, b) => byDateDesc(a.instagram.lastPostAt, b.instagram.lastPostAt),
   updated: (a, b) => byDateDesc(a.wusaLastUpdated, b.wusaLastUpdated),
 };
 
 export function applyFilters(clubs, f) {
   const filtered = clubs.filter((c) => matchesFilters(c, f));
-  const counts = { all: filtered.length, active: 0, inactive: 0, unknown: 0 };
-  for (const c of filtered) counts[c.instagram.status]++;
+  const counts = { all: filtered.length, active: 0, inactive: 0 };
+  for (const c of filtered) counts[c.status]++;
 
-  const visible = f.tab === 'all' ? filtered : filtered.filter((c) => c.instagram.status === f.tab);
+  const visible = f.tab === 'all' ? filtered : filtered.filter((c) => c.status === f.tab);
   const compare = COMPARATORS[f.sort] ?? COMPARATORS.name;
   return { visible: visible.sort((a, b) => compare(a, b) || COMPARATORS.name(a, b)), counts };
 }

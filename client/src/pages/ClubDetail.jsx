@@ -17,8 +17,6 @@ export default function ClubDetail() {
   if (error) return <p className="error">{error}</p>;
   if (!club) return <p className="empty">Loading…</p>;
 
-  const ig = club.instagram;
-
   return (
     <>
       <Link to="/clubs" className="back"><BackIcon />All clubs</Link>
@@ -28,7 +26,7 @@ export default function ClubDetail() {
         <div>
           <h1>{club.name}{club.acronym && ` (${club.acronym})`}</h1>
           <div className="chips">
-            <StatusBadge instagram={ig} />
+            <StatusBadge status={club.status} />
             {club.categories.map((c) => <span key={c} className="tag">{c}</span>)}
           </div>
         </div>
@@ -51,18 +49,9 @@ export default function ClubDetail() {
         </div>
 
         <aside>
-          <Section title="Instagram activity">
-            <dl className="facts">
-              <dt>Status</dt><dd>{ig.reason}</dd>
-              {ig.handle && <><dt>Account</dt><dd><a href={`https://www.instagram.com/${ig.handle}`} target="_blank" rel="noreferrer">@{ig.handle}</a></dd></>}
-              {ig.lastPostAt && <><dt>Latest post</dt><dd>{formatDate(ig.lastPostAt)}</dd></>}
-              {ig.checkedAt && <><dt>Checked</dt><dd>{formatDate(ig.checkedAt)}</dd></>}
-            </dl>
-          </Section>
-
           <Section title="Details">
             <dl className="facts">
-              <dt>WUSA</dt><dd>{club.wusaActiveThisTerm ? 'Ratified' : 'Not ratified'} for {club.currentTermName}</dd>
+              <dt>WUSA</dt><dd>{club.status === 'active' ? 'Active' : 'Not active'} for {club.currentTermName}</dd>
               {club.memberCount != null && <><dt>Members</dt><dd>{club.memberCount}</dd></>}
               {club.executiveCount > 0 && <><dt>Executives</dt><dd>{club.executiveCount}</dd></>}
               {club.yearStarted && <><dt>Founded</dt><dd>{club.yearStarted}</dd></>}
