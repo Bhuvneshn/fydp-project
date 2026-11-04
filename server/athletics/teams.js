@@ -1,6 +1,6 @@
 // Intramural team finder: teams looking for players, and players looking for teams.
 import { Router } from 'express';
-import { db, toId } from '../db.js';
+import { db, lockUser, toId } from '../db.js';
 import { requireAuth } from '../auth.js';
 import { DIVISIONS, INTRAMURAL_SPORTS, SKILL_LEVELS } from './intramurals.js';
 
@@ -57,6 +57,8 @@ const cleanText = (v, max) => {
   const s = String(v ?? '').trim();
   return s ? s.slice(0, max) : null;
 };
+const lockPost = db.prepare('SELECT * FROM team_posts WHERE id = ? FOR UPDATE');
+
 const toInt = (v) => (v === '' || v == null ? null : Number.parseInt(v, 10));
 
 // Returns [values, error].
@@ -160,21 +162,25 @@ teamsRouter.post('/', async (req, res) => {
   const [values, error] = validatePost(req.body);
   if (error) return res.status(400).json({ error });
 
-  const { n } = await db
-    .prepare("SELECT COUNT(*) AS n FROM team_posts WHERE user_id = ? AND status = 'open'")
-    .get(req.session.userId);
-  if (n >= MAX_OPEN_POSTS) {
+  const created = await db.transaction(async () => {
+    await lockUser(req.session.userId);
+    const { n } = await db
+      .prepare("SELECT COUNT(*) AS n FROM team_posts WHERE user_id = ? AND status = 'open'")
+      .get(req.session.userId);
+    if (n >= MAX_OPEN_POSTS) return null;
+
+    return db
+      .prepare(
+        `INSERT INTO team_posts (user_id, kind, sport, division, skill, team_name, players_have, team_size, note)
+         VALUES (:user_id, :kind, :sport, :division, :skill, :team_name, :players_have, :team_size, :note)
+         RETURNING id`
+      )
+      .get({ user_id: req.session.userId, ...values });
+  });
+  if (!created) {
     return res.status(400).json({ error: `You can have at most ${MAX_OPEN_POSTS} open posts. Close one first.` });
   }
-
-  const { id } = await db
-    .prepare(
-      `INSERT INTO team_posts (user_id, kind, sport, division, skill, team_name, players_have, team_size, note)
-       VALUES (:user_id, :kind, :sport, :division, :skill, :team_name, :players_have, :team_size, :note)
-       RETURNING id`
-    )
-    .get({ user_id: req.session.userId, ...values });
-  res.status(201).json({ post: toPost(await findPost(id), req.session.userId) });
+  res.status(201).json({ post: toPost(await findPost(created.id), req.session.userId) });
 });
 
 // Owner updates: { status } to close/reopen/mark filled, or { playersHave } as the roster changes.
@@ -182,22 +188,30 @@ teamsRouter.patch('/:id', async (req, res) => {
   const post = await ownPostOr404(req, res);
   if (!post) return;
 
-  let { status, players_have: have } = post;
-  if (req.body.status !== undefined) {
-    if (!['open', 'filled', 'closed'].includes(req.body.status)) return res.status(400).json({ error: 'Invalid status.' });
-    status = req.body.status;
-  }
-  if (req.body.playersHave !== undefined && post.kind === 'team') {
-    have = toInt(req.body.playersHave);
-    if (!Number.isInteger(have) || have < 1 || have > post.team_size) {
-      return res.status(400).json({ error: `Players must be between 1 and ${post.team_size}.` });
-    }
-    if (req.body.status === undefined) status = have >= post.team_size ? 'filled' : 'open';
-  }
+  // Locking the post means this works from the current roster, not one an accept just changed.
+  const err = await db.transaction(async () => {
+    const locked = await lockPost.get(post.id);
+    if (!locked) return [404, 'Post not found.'];
 
-  await db
-    .prepare('UPDATE team_posts SET status = ?, players_have = ?, updated_at = now_iso() WHERE id = ?')
-    .run(status, have, post.id);
+    let { status, players_have: have } = locked;
+    if (req.body.status !== undefined) {
+      if (!['open', 'filled', 'closed'].includes(req.body.status)) return [400, 'Invalid status.'];
+      status = req.body.status;
+    }
+    if (req.body.playersHave !== undefined && locked.kind === 'team') {
+      have = toInt(req.body.playersHave);
+      if (!Number.isInteger(have) || have < 1 || have > locked.team_size) {
+        return [400, `Players must be between 1 and ${locked.team_size}.`];
+      }
+      if (req.body.status === undefined) status = have >= locked.team_size ? 'filled' : 'open';
+    }
+
+    await db
+      .prepare('UPDATE team_posts SET status = ?, players_have = ?, updated_at = now_iso() WHERE id = ?')
+      .run(status, have, post.id);
+    return null;
+  });
+  if (err) return res.status(err[0]).json({ error: err[1] });
   res.json({ post: toPost(await findPost(post.id), req.session.userId) });
 });
 
@@ -237,11 +251,13 @@ teamsRouter.patch('/:id/responses/:responseId', async (req, res) => {
   const status = req.body.status;
   if (!['accepted', 'declined'].includes(status)) return res.status(400).json({ error: 'Invalid status.' });
 
-  // Locking the post stops two accepts counting the same open spot.
+  // Locking the post stops two accepts counting the same open spot, and locking the request
+  // stops the player withdrawing it while it's being accepted.
   const err = await db.transaction(async () => {
-    const locked = await db.prepare('SELECT * FROM team_posts WHERE id = ? FOR UPDATE').get(post.id);
+    const locked = await lockPost.get(post.id);
+    if (!locked) return [404, 'Post not found.'];
     const response = await db
-      .prepare('SELECT * FROM team_responses WHERE id = ? AND post_id = ?')
+      .prepare('SELECT * FROM team_responses WHERE id = ? AND post_id = ? FOR UPDATE')
       .get(toId(req.params.responseId), post.id);
     if (!response) return [404, 'Request not found.'];
     if (response.status !== 'pending') return [400, `Already ${response.status}.`];

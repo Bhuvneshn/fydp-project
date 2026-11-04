@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { Router } from 'express';
-import { db } from '../db.js';
+import { db, lockUser } from '../db.js';
 import { requireAuth } from '../auth.js';
 import { HOSTED_CATEGORIES, MAX_UPCOMING_HOSTED, validateHostedEvent } from './hosted.js';
 import { buddyState, optIn, optOut } from './buddies.js';
@@ -96,16 +96,15 @@ eventsRouter.post('/', async (req, res) => {
   const [values, error] = await validateHostedEvent(req.body);
   if (error) return res.status(400).json({ error });
 
-  const { n } = await db
-    .prepare("SELECT COUNT(*) AS n FROM events WHERE host_user_id = ? AND start_at >= ?")
-    .get(userId, new Date().toISOString());
-  if (n >= MAX_UPCOMING_HOSTED) {
-    return res.status(400).json({ error: `You can host at most ${MAX_UPCOMING_HOSTED} upcoming events.` });
-  }
-
   const { email } = await db.prepare('SELECT email FROM users WHERE id = ?').get(userId);
   const id = `student:${randomBytes(6).toString('base64url')}`;
-  await db.transaction(async () => {
+  const atLimit = await db.transaction(async () => {
+    await lockUser(userId);
+    const { n } = await db
+      .prepare('SELECT COUNT(*) AS n FROM events WHERE host_user_id = ? AND start_at >= ?')
+      .get(userId, new Date().toISOString());
+    if (n >= MAX_UPCOMING_HOSTED) return true;
+
     await db.prepare(
       `INSERT INTO events (id, source, title, description, start_at, end_at, location, building_code,
                            organizer, categories, imported_at, host_user_id, capacity)
@@ -113,7 +112,9 @@ eventsRouter.post('/', async (req, res) => {
                :organizer, :categories, :created_at, :host_user_id, :capacity)`
     ).run({ ...values, id, organizer: handleOf(email), created_at: new Date().toISOString(), host_user_id: userId });
     await db.prepare('INSERT INTO event_rsvps (event_id, user_id) VALUES (?, ?)').run(id, userId);
+    return false;
   });
+  if (atLimit) return res.status(400).json({ error: `You can host at most ${MAX_UPCOMING_HOSTED} upcoming events.` });
   res.status(201).json({ event: toEvent(await findEvent(id, userId), { full: true, userId }) });
 });
 

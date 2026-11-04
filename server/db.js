@@ -7,7 +7,7 @@ if (!url) throw new Error('DATABASE_URL must be set. See .env.example.');
 // BIGINT columns and COUNT(*) all fit in a JS number (row counts, ms since epoch).
 pg.types.setTypeParser(pg.types.builtins.INT8, Number);
 
-const isLocal = /@(localhost|127\.0\.0\.1)[:/]/.test(url);
+const isLocal = /[@/](localhost|127\.0\.0\.1)[:/]/.test(url);
 const pool = new pg.Pool({
   connectionString: url,
   max: Number(process.env.DATABASE_POOL_SIZE ?? 5),
@@ -55,19 +55,30 @@ export const db = {
   async transaction(fn) {
     if (transactions.getStore()) return fn();
     const client = await pool.connect();
+    // A dropped connection already fails the running query. The pool stops listening while a
+    // client is checked out, so without this the same error would crash the server.
+    const onError = (err) => console.error('Database connection error:', err.message);
+    client.on('error', onError);
+    let broken = false;
     try {
       await client.query('BEGIN');
       const result = await transactions.run(client, fn);
       await client.query('COMMIT');
       return result;
     } catch (err) {
-      await client.query('ROLLBACK').catch(() => {});
+      await client.query('ROLLBACK').catch(() => {
+        broken = true;
+      });
       throw err;
     } finally {
-      client.release();
+      client.off('error', onError);
+      client.release(broken);
     }
   },
 };
+
+// Inside a transaction, makes other requests for this user wait, so they can't both pass a check.
+export const lockUser = (id) => db.prepare('SELECT id FROM users WHERE id = ? FOR NO KEY UPDATE').get(id);
 
 // A URL id as an INTEGER. Anything else becomes 0, which matches no row.
 export function toId(value) {
